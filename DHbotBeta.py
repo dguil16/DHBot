@@ -20,7 +20,7 @@ def get_bot_credential(credential):
 	x.close()
 	return bot_json[credential]
 
-def check_role(role_test):
+def check_role(message, role_test):
 	mem = discord.utils.find(lambda m: m.id == message.author.id, message.channel.server.members)
 	user_roles = []
 	for x in mem.roles:
