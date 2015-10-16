@@ -1,0 +1,2 @@
+# DHBot
+DH Discord Bot
