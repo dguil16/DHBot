@@ -31,7 +31,7 @@ logging.basicConfig()
 
 # Initialize client object, begin connection
 client = discord.Client()
-client.login(get_bot_username, get_bot_password)
+client.login(get_bot_username(), get_bot_password())
 
 if not client.is_logged_in:
 	print('Logging in to Discord failed')
