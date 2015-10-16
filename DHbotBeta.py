@@ -43,23 +43,24 @@ def on_message(message):
 		bgold, bsilver = divmod(bsilver, 100)
 		ssilver, scopper = divmod(sell_price_raw, 100)
 		sgold, ssilver = divmod(ssilver, 100)
-		client.send_message(message.channel, 'The current buy price of ' +found_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str
-
-(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
+		client.send_message(message.channel, 'The current buy price of ' +found_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
 
 	if message.content.startswith('!timetohot'):
 		time_remaining = datetime.datetime(2015, 10, 23,2,1) - datetime.datetime.now()
 		m, s = divmod(time_remaining.seconds, 60)
 		h, m = divmod(m, 60)
-		client.send_message(message.channel, 'The time remaining to HoT launch is: ' +str(time_remaining.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' 
-
-+ str(s) + ' seconds.')
+		client.send_message(message.channel, 'The time remaining to HoT launch is: ' +str(time_remaining.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
 
 	if message.content.startswith('!test'):
-		username = message.author
-		servmem = server.member(username)
-		#role = username.roles
-		client.send_message(message.channel, str(servmem))
+		srv = message.channel.server
+		mem = discord.utils.find(lambda m: m.id == message.author.id, srv.members)
+		ro = list()
+		for x in mem.roles:
+			ro.append(x.name)
+		if 'Tester' in ro:
+			client.send_message(message.channel, 'You are a Tester')
+		else:
+			client.send_message(message.channel, 'You are not a Tester.')
 
 #@client.event
 #def on_message(message):
