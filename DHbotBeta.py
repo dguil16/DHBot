@@ -90,6 +90,15 @@ def on_message(message):
 			client.send_message(message.channel, 'You are not a Tester.')
 
 
+	if message.content.startswith('!quit'):
+		srv = message.channel.server
+		mem = discord.utils.find(lambda m: m.id == message.author.id, srv.members)
+		ro = list()
+		for x in mem.roles:
+			ro.append(x.name)
+		if 'Tester' in ro:
+			client.logout()
+
 #@client.event
 #def on_message(message):
 #	if message.content.startswith('!id'):
