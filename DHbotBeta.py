@@ -84,8 +84,6 @@ def on_message(message):
 #			if x.name == message.author.name:
 #				client.send_message(message.channel, x.roles)
 
-
-
 #@client.event
 #def on_message(message):
 #	if message.content.startswith('!id'):
