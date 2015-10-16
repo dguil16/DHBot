@@ -47,7 +47,7 @@ if not client.is_logged_in:
 def on_message(message):
 
 	if message.content.startswith('!edit_events'):
-		if check_role('Tester') == True:
+		if check_role(message, 'Tester') == True:
 			text_file = open(EVENT_TEXT_FILE, 'w')
 			new_event_text = message.content.partition(' ')[2]
 			trim_event_text = new_event_text[0:1999]
@@ -100,14 +100,14 @@ def on_message(message):
 
 
 	if message.content.startswith('!test'):
-		if check_role('Tester') == True:
+		if check_role(message, 'Tester') == True:
 			client.send_message(message.channel, 'You are a Tester')
 		else:
 			client.send_message(message.channel, 'You are not a Tester.')
 
 
 	if message.content.startswith('!quit'):
-		if check_role('Tester') == True:
+		if check_role(message, 'Tester') == True:
 			client.logout()
 		else:
 			client.send_message(message.channel, 'You do not have permission to stop DHBot.')
