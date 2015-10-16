@@ -11,10 +11,14 @@ import gw2api
 # Global variables#
 ###################
 
-BOT_LOGIN_USERNAME = ''
-BOT_LOGIN_PASSWORD = ''
+BOT = open('BotCred.txt', 'r')
+BOT_CRED = json.load(BOT)
+BOT.close()
+BOT_LOGIN_USERNAME = BOT_CRED['Username']
+BOT_LOGIN_PASSWORD = BOT_CRED['Password']
 EVENT_TEXT_FILE = "C:/Users/Daniel/Google Drive/DH Stuff/events.txt"
 
+#Functions
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
@@ -78,11 +82,7 @@ def on_message(message):
 			client.send_message(message.channel, 'You are a Tester')
 		else:
 			client.send_message(message.channel, 'You are not a Tester.')
-#		client.send_message(message.channel, mem.roles)
 
-#		for x in message.channel.server.members:
-#			if x.name == message.author.name:
-#				client.send_message(message.channel, x.roles)
 
 #@client.event
 #def on_message(message):
