@@ -11,7 +11,7 @@ import gw2api
 # Global variables#
 ###################
 
-EVENT_TEXT_FILE = os.path.normpath("C:/Users/Daniel/Google Drive/DH Stuff/events.txt")
+EVENT_TEXT_FILE = "events.txt"
 
 #Functions
 def get_bot_credential(credential):
@@ -50,7 +50,7 @@ def on_message(message):
 		if check_role('Tester') == True:
 			text_file = open(EVENT_TEXT_FILE, 'w')
 			new_event_text = message.content.partition(' ')[2]
-			trim_event_text = new_event_text[0:200]
+			trim_event_text = new_event_text[0:1999]
 			text_file.write(trim_event_text)
 			text_file.close()
 
@@ -77,9 +77,11 @@ def on_message(message):
 		item_name = message.content.partition(' ')[2]
 		response1 = requests.get("http://www.gw2spidy.com/api/v0.9/json/item-search/"+item_name)
 		item_results = json.loads(response1.text)
-		found_name = item_results['results'][0]['name']
-		item_id = item_results['results'][0]['data_id']
-		response2 = requests.get("https://api.guildwars2.com/v2/commerce/prices/"+str(item_id))
+		testresults = item_results['results']
+		for x in range(len(testresults)):
+			if str(item_name) == str(testresults[x]['name']):
+				itemid = testresults[x]['data_id']
+		response2 = requests.get("https://api.guildwars2.com/v2/commerce/prices/"+str(itemid))
 		listing = json.loads(response2.text)
 		buy_price_raw = listing['buys']['unit_price']
 		sell_price_raw = listing['sells']['unit_price']
@@ -87,7 +89,7 @@ def on_message(message):
 		bgold, bsilver = divmod(bsilver, 100)
 		ssilver, scopper = divmod(sell_price_raw, 100)
 		sgold, ssilver = divmod(ssilver, 100)
-		client.send_message(message.channel, 'The current buy price of ' +found_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
+		client.send_message(message.channel, 'The current buy price of ' +item_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
 
 
 	if message.content.startswith('!timetohot'):
