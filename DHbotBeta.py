@@ -14,24 +14,18 @@ import gw2api
 EVENT_TEXT_FILE = "C:/Users/Daniel/Google Drive/DH Stuff/events.txt"
 
 #Functions
-def get_bot_username():
+def get_bot_credential(credential):
 	x = open('BotCred.txt', 'r')
 	bot_json = json.load(x)
 	x.close()
-	return bot_json['Username']
-
-def get_bot_password():
-	x = open('BotCred.txt', 'r')
-	bot_json = json.load(x)
-	x.close()
-	return bot_json['Password']
+	return bot_json[credential]
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
 
 # Initialize client object, begin connection
 client = discord.Client()
-client.login(get_bot_username(), get_bot_password())
+client.login(get_bot_credential('Username'), get_bot_credential('Password'))
 
 if not client.is_logged_in:
 	print('Logging in to Discord failed')
