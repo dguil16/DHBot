@@ -77,17 +77,19 @@ def on_message(message):
 		item_name = message.content.partition(' ')[2]
 		response1 = requests.get("http://www.gw2spidy.com/api/v0.9/json/item-search/"+item_name)
 		item_results = json.loads(response1.text)
-		found_name = item_results['results'][0]['name']
-		item_id = item_results['results'][0]['data_id']
-		response2 = requests.get("https://api.guildwars2.com/v2/commerce/prices/"+str(item_id))
-		listing = json.loads(response2.text)
-		buy_price_raw = listing['buys']['unit_price']
-		sell_price_raw = listing['sells']['unit_price']
-		bsilver, bcopper = divmod(buy_price_raw, 100)
-		bgold, bsilver = divmod(bsilver, 100)
-		ssilver, scopper = divmod(sell_price_raw, 100)
-		sgold, ssilver = divmod(ssilver, 100)
-		client.send_message(message.channel, 'The current buy price of ' +found_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
+#		found_name = item_results['results'][0]['name']
+#		item_id = item_results['results'][0]['data_id']
+#		response2 = requests.get("https://api.guildwars2.com/v2/commerce/prices/"+str(item_id))
+#		listing = json.loads(response2.text)
+#		buy_price_raw = listing['buys']['unit_price']
+#		sell_price_raw = listing['sells']['unit_price']
+#		bsilver, bcopper = divmod(buy_price_raw, 100)
+#		bgold, bsilver = divmod(bsilver, 100)
+#		ssilver, scopper = divmod(sell_price_raw, 100)
+#		sgold, ssilver = divmod(ssilver, 100)
+		test = item_results['results']['name':item_name]
+		client.send_message(message.channel, str(test))
+#		client.send_message(message.channel, 'The current buy price of ' +found_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
 
 
 	if message.content.startswith('!timetohot'):
