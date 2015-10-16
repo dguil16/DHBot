@@ -11,21 +11,27 @@ import gw2api
 # Global variables#
 ###################
 
-BOT = open('BotCred.txt', 'r')
-BOT_CRED = json.load(BOT)
-BOT.close()
-BOT_LOGIN_USERNAME = BOT_CRED['Username']
-BOT_LOGIN_PASSWORD = BOT_CRED['Password']
 EVENT_TEXT_FILE = "C:/Users/Daniel/Google Drive/DH Stuff/events.txt"
 
 #Functions
+def get_bot_username():
+	x = open('BotCred.txt', 'r')
+	bot_json = json.load(x)
+	x.close()
+	return bot_json['Username']
+
+def get_bot_password():
+	x = open('BotCred.txt', 'r')
+	bot_json = json.load(x)
+	x.close()
+	return bot_json['Password']
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
 
 # Initialize client object, begin connection
 client = discord.Client()
-client.login(BOT_LOGIN_USERNAME, BOT_LOGIN_PASSWORD)
+client.login(get_bot_username, get_bot_password)
 
 if not client.is_logged_in:
 	print('Logging in to Discord failed')
