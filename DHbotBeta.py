@@ -4,6 +4,7 @@ import logging
 import os
 import requests
 
+import dice
 import discord
 import gw2api
 
@@ -123,8 +124,29 @@ def on_message(message):
 	if message.content.startswith('!worldbosses'):
 		pass
 
-	if message.content.startswith('(╯°□°）╯︵ ┻━┻'):
-		client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ)')
+	if '(╯°□°）╯︵ ┻━┻' in message.content:
+		client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')
+
+	if message.content.startswith('!roll'):
+		droll = message.content.partition(' ')[2]
+		client.send_message(message.channel, str(dice.roll(droll)))
+
+	if message.content.startswith('!fractal'):
+		fractal_level = message.content.partition(' ')[2]
+		text_file = open('fractal'+str(fractal_level)+'.txt', 'r')
+		client.send_message(message.channel, 'Would you like to do a 50 fractal? ' + str(text_file.read()))
+		text_file.close()
+
+	if message.content.startswith('!add_fractal'):
+		fractal_level = message.content.partition(' ')[2]
+		with open('fractal'+fractal_level+'.txt', 'r') as f:
+			if str(message.author) not in f.read():
+				with open('fractal'+fractal_level+'.txt', 'a') as g:
+					g.write(' @'+str(message.author.name))
+				client.send_message(message.channel, str(message.author.name) + ', you have been added to the fractal ' +str(fractal_level) + ' list.')
+			else:
+				client.send_message(message.channel, str(message.author.name) + ', you are already on that list.')
+
 
 #@client.event
 #def on_message(message):
