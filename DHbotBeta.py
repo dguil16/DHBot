@@ -12,6 +12,7 @@ import gw2api
 ###################
 
 EVENT_TEXT_FILE = "events.txt"
+HELP_TEXT_FILE = 'help.txt'
 
 #Functions
 def get_bot_credential(credential):
@@ -47,14 +48,14 @@ if not client.is_logged_in:
 def on_message(message):
 
 	if message.content.startswith('!edit_events'):
-		if check_role(message, 'Tester') == True:
+		if check_role(message, 'BotManager') == True:
 			text_file = open(EVENT_TEXT_FILE, 'w')
 			new_event_text = message.content.partition(' ')[2]
 			trim_event_text = new_event_text[0:1999]
 			text_file.write(trim_event_text)
 			text_file.close()
-
-			client.send_message(message.channel, 'Your new message has been written.')
+			client.delete_message(message)
+			client.send_message(message.channel, str(message.author) +' has updated the events message.')
 		else:
 			client.send_message(message.channel, 'You do not have permission to edit the event message.')
 
@@ -70,8 +71,9 @@ def on_message(message):
 
 
 	if message.content.startswith('!help'):
-		pass
-
+		text_file = open(HELP_TEXT_FILE, 'r')
+		client.send_message(message.channel, text_file.read())
+		text_file.close()
 
 	if message.content.startswith('!price'):
 		item_name = message.content.partition(' ')[2]
@@ -79,7 +81,7 @@ def on_message(message):
 		item_results = json.loads(response1.text)
 		testresults = item_results['results']
 		for x in range(len(testresults)):
-			if str(item_name) == str(testresults[x]['name']):
+			if str(item_name).lower() == str(testresults[x]['name']).lower():
 				itemid = testresults[x]['data_id']
 		response2 = requests.get("https://api.guildwars2.com/v2/commerce/prices/"+str(itemid))
 		listing = json.loads(response2.text)
@@ -100,17 +102,29 @@ def on_message(message):
 
 
 	if message.content.startswith('!test'):
-		if check_role(message, 'Tester') == True:
-			client.send_message(message.channel, 'You are a Tester')
+		if check_role(message, 'BotManager') == True:
+			client.send_message(message.channel, 'You are a BotManager')
 		else:
-			client.send_message(message.channel, 'You are not a Tester.')
+			client.send_message(message.channel, 'You are not a BotManager.')
 
 
 	if message.content.startswith('!quit'):
-		if check_role(message, 'Tester') == True:
+		if check_role(message, 'BotManager') == True:
 			client.logout()
 		else:
 			client.send_message(message.channel, 'You do not have permission to stop DHBot.')
+
+	if message.content.startswith('!timetoreset'):
+		pass
+
+	if message.content.startswith('!timetowvwreset'):
+		pass
+
+	if message.content.startswith('!worldbosses'):
+		pass
+
+	if message.content.startswith('(╯°□°）╯︵ ┻━┻'):
+		client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ)')
 
 #@client.event
 #def on_message(message):
