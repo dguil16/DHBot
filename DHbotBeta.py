@@ -41,13 +41,13 @@ def weekly_event(event_day, event_hour, event_minute):
 	event_hour is an integer between 0 and 23
 	event_minute is an integer between 0 and 59
 
+	Provide these times in UTC
+
 	event_time is a datetime object. The day is initially set to be the same as the current day.
 	This value is then altered based on a comparison with event_day, due to the lack of 
 	support for days of the week.
-
-	TODO: Implement timezone features, so that this script can be made portable.
 	"""
-	now = datetime.datetime.now()
+	now = datetime.datetime.utcnow()
 	event_time = datetime.datetime(now.year, now.month, now.day, hour=event_hour, minute=event_minute)
 
 	if event_day > now.weekday():
@@ -71,6 +71,16 @@ def weekly_event(event_day, event_hour, event_minute):
 				event_time = event_time + datetime.timedelta(days=7)
 				return (event_time - now)
 
+def daily_event(event_hour, event_minute):
+	now = datetime.datetime.utcnow()
+	event_time = datetime.datetime(now.year, now.month, now.day, hour=event_hour, minute=event_minute)
+
+	if event_time > now:
+		return (event_time - now)
+	elif event_time == now or event_time < now:
+		event_time = event_time + datetime.timedelta(days=1)
+		return (event_time - now)
+
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
@@ -87,7 +97,12 @@ if not client.is_logged_in:
 @client.event
 def on_message(message):
 
-	if message.content.startswith('!edit_events'):
+	if message.content.startswith('!events'):
+		text_file = open(EVENT_TEXT_FILE, 'r')
+		client.send_message(message.channel, text_file.read())
+		text_file.close()
+
+	if message.content.startswith('!events_edit'):
 		if check_role(message, 'BotManager') == True:
 			text_file = open(EVENT_TEXT_FILE, 'w')
 			new_event_text = message.content.partition(' ')[2]
@@ -95,20 +110,12 @@ def on_message(message):
 			text_file.write(trim_event_text)
 			text_file.close()
 			client.delete_message(message)
-			client.send_message(message.channel, str(message.author) +' has updated the events message.')
+			client.send_message(message.channel, str(message.author) +' has updated the event message.')
 		else:
 			client.send_message(message.channel, 'You do not have permission to edit the event message.')
 
-
-	if message.content.startswith('!events'):
-		text_file = open(EVENT_TEXT_FILE, 'r')
-		client.send_message(message.channel, text_file.read())
-		text_file.close()
-
-
 	if message.content.startswith('!hello'):
 		client.send_message(message.channel, 'Hello {}!'.format(message.author.mention()))
-
 
 	if message.content.startswith('!help'):
 		text_file = open(HELP_TEXT_FILE, 'r')
@@ -133,18 +140,23 @@ def on_message(message):
 		sgold, ssilver = divmod(ssilver, 100)
 		client.send_message(message.channel, 'The current buy price of ' +item_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
 
-
 	if message.content.startswith('!timetohot'):
 		time_remaining = datetime.datetime(2015, 10, 23,2,1) - datetime.datetime.now()
 		m, s = divmod(time_remaining.seconds, 60)
 		h, m = divmod(m, 60)
 		client.send_message(message.channel, 'The time remaining to HoT launch is: ' +str(time_remaining.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
 
-
 	if message.content.startswith('!timetomissions'):
-		mission_time_delta = weekly_event(5, 19, 10)
+		mission_time_delta = weekly_event(6, 1, 10)
 		client.send_message(message.channel, 'Time remaining until guild missions: ' + str(mission_time_delta) + '\n Meet in Queensdale!')
 
+	if message.content.startswith('!timetoreset'):
+		reset_time_delta = daily_event(0, 0)
+		client.send_message(message.channel, 'Time remaining until reset: ' + str(reset_time_delta))
+
+	if message.content.startswith('!timetowvwreset'):
+		wvw_time_delta = weekly_event(5, 0, 0)
+		client.send_message(message.channel, 'Time remaining until WvW reset: ' + str(wvw_time_delta))
 
 	if message.content.startswith('!test'):
 		if check_role(message, 'BotManager') == True:
@@ -152,18 +164,11 @@ def on_message(message):
 		else:
 			client.send_message(message.channel, 'You are not a BotManager.')
 
-
 	if message.content.startswith('!quit'):
 		if check_role(message, 'BotManager') == True:
 			client.logout()
 		else:
 			client.send_message(message.channel, 'You do not have permission to stop DHBot.')
-
-	if message.content.startswith('!timetoreset'):
-		pass
-
-	if message.content.startswith('!timetowvwreset'):
-		pass
 
 	if message.content.startswith('!worldbosses'):
 		pass
