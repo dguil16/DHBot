@@ -8,9 +8,9 @@ import dice
 import discord
 import gw2api
 
-###################
-# Global variables#
-###################
+##################
+# Global variables
+##################
 
 EVENT_TEXT_FILE = "events.txt"
 HELP_TEXT_FILE = 'help.txt'
@@ -32,6 +32,45 @@ def check_role(message, role_test):
 		return True
 	else:
 		return False
+
+def weekly_event(event_day, event_hour, event_minute):
+	"""
+	This function computes the timedelta for events that occur weekly.
+
+	event_day is an integer between 0 and 6, where 0 is monday and 6 is sunday.
+	event_hour is an integer between 0 and 23
+	event_minute is an integer between 0 and 59
+
+	event_time is a datetime object. The day is initially set to be the same as the current day.
+	This value is then altered based on a comparison with event_day, due to the lack of 
+	support for days of the week.
+
+	TODO: Implement timezone features, so that this script can be made portable.
+	"""
+	now = datetime.datetime.now()
+	event_time = datetime.datetime(now.year, now.month, now.day, hour=event_hour, minute=event_minute)
+
+	if event_day > now.weekday():
+		x = event_day - now.weekday()
+		event_time = event_time + datetime.timedelta(days=x)
+		return (event_time - now)
+	elif event_day < now.weekday():
+		x = abs(event_day - now.weekday())
+		event_time = event_time + datetime.timedelta(days=(7-x))
+		return (event_time - now)
+	elif event_day == now.weekday():
+		if event_time.hour > now.hour:
+			return (event_time - now)
+		elif event_time.hour < now.hour:
+			event_time = event_time + datetime.timedelta(days=7)
+			return (event_time - now)
+		elif event_time.hour == now.hour:
+			if event_time.minute > now.minute:
+				return (event_time - now)
+			elif event_time.minute == now.minute or event_time.minute < now.minute:
+				event_time = event_time + datetime.timedelta(days=7)
+				return (event_time - now)
+
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
@@ -100,6 +139,11 @@ def on_message(message):
 		m, s = divmod(time_remaining.seconds, 60)
 		h, m = divmod(m, 60)
 		client.send_message(message.channel, 'The time remaining to HoT launch is: ' +str(time_remaining.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
+
+
+	if message.content.startswith('!timetomissions'):
+		mission_time_delta = weekly_event(5, 19, 10)
+		client.send_message(message.channel, 'Time remaining until guild missions: ' + str(mission_time_delta) + '\n Meet in Queensdale!')
 
 
 	if message.content.startswith('!test'):
