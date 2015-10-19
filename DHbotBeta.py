@@ -110,7 +110,7 @@ if not client.is_logged_in:
 def on_member_join(newmember):
 	admin_users = []
 	for x in newmember.server.members:
-		if check_user_role(x, 'Admin') == True:
+		if check_user_role(x, 'BotManager') == True:
 			admin_users += [x]
 	notification_channel = discord.utils.find(lambda m: m.name == 'botbeta', newmember.server.channels)
 	admin_mentions = ''
