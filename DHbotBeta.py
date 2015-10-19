@@ -117,6 +117,7 @@ def on_member_join(newmember):
 	for x in admin_users:
 		admin_mentions += ' '+str(x.mention())
 	client.send_message(notification_channel, newmember.name + ' needs permissions. {}'.format(admin_mentions))
+#	client.send_message(newmember, 'Welcome to our Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible. In the meantime, you are free to use the lobby text chat and Public voice channels. Please be sure to read the announcements as well. You may also utilize some of my functions by responding to this message or, once you have permissions, by posting in the botbeta channel. To find a list of my functions, you may type !help.')
 
 @client.event
 def on_message(message):
@@ -188,11 +189,13 @@ def on_message(message):
 		h, m = divmod(m, 60)
 		client.send_message(message.channel, 'Time remaining until WvW reset: ' + str(wvw_time_delta.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
 
-	if message.content.startswith('!test'):
-		if check_role(message, 'BotManager') == True:
-			client.send_message(message.channel, 'You are a BotManager')
-		else:
-			client.send_message(message.channel, 'You are not a BotManager.')
+	if message.content.startswith('!lmgtfy'):
+		search = message.content.partition(' ')[2].replace(' ','+')
+		client.send_message(message.channel, 'http://lmgtfy.com/?q='+search)
+
+	if message.content.startswith('!wiki'):
+		search = message.content.partition(' ')[2].replace(' ', '_')
+		client.send_message(message.channel, 'http://wiki.guildwars2.com/wiki/Special:Search/'+search)
 
 	if message.content.startswith('!quit'):
 		if check_role(message, 'BotManager') == True:
