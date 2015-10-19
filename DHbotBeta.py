@@ -33,6 +33,18 @@ def check_role(message, role_test):
 	else:
 		return False
 
+def check_user_role(member, role_test):
+	mem = discord.utils.find(lambda m: m.id == member.id, member.server.members)
+	user_roles = []
+	for x in mem.roles:
+		user_roles.append(x.name)
+
+	if role_test in user_roles:
+		return True
+	else:
+		return False
+
+
 def weekly_event(event_day, event_hour, event_minute):
 	"""
 	This function computes the timedelta for events that occur weekly.
@@ -95,6 +107,18 @@ if not client.is_logged_in:
 
 # Event handler
 @client.event
+def on_member_join(newmember):
+	admin_users = []
+	for x in newmember.server.members:
+		if check_user_role(x, 'Admin') == True:
+			admin_users += [x]
+	notification_channel = discord.utils.find(lambda m: m.name == 'botbeta', newmember.server.channels)
+	admin_mentions = ''
+	for x in admin_users:
+		admin_mentions += ' '+str(x.mention())
+	client.send_message(notification_channel, newmember.name + ' needs permissions. {}'.format(admin_mentions))
+
+@client.event
 def on_message(message):
 
 	if message.content.startswith('!events'):
@@ -148,15 +172,21 @@ def on_message(message):
 
 	if message.content.startswith('!timetomissions'):
 		mission_time_delta = weekly_event(6, 1, 10)
-		client.send_message(message.channel, 'Time remaining until guild missions: ' + str(mission_time_delta) + '\n Meet in Queensdale!')
+		m, s = divmod(mission_time_delta.seconds, 60)
+		h, m = divmod(m, 60)
+		client.send_message(message.channel, 'Time remaining until guild missions: ' +str(mission_time_delta.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.\n Meet in Queensdale!')
 
 	if message.content.startswith('!timetoreset'):
 		reset_time_delta = daily_event(0, 0)
-		client.send_message(message.channel, 'Time remaining until reset: ' + str(reset_time_delta))
+		m, s = divmod(reset_time_delta.seconds, 60)
+		h, m = divmod(m, 60)
+		client.send_message(message.channel, 'Time remaining until reset: ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
 
 	if message.content.startswith('!timetowvwreset'):
 		wvw_time_delta = weekly_event(5, 0, 0)
-		client.send_message(message.channel, 'Time remaining until WvW reset: ' + str(wvw_time_delta))
+		m, s = divmod(wvw_time_delta.seconds, 60)
+		h, m = divmod(m, 60)
+		client.send_message(message.channel, 'Time remaining until WvW reset: ' + str(wvw_time_delta.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
 
 	if message.content.startswith('!test'):
 		if check_role(message, 'BotManager') == True:
