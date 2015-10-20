@@ -1,20 +1,6 @@
-<<<<<<< HEAD
-BotCred.json.txt
-BotCred.txt
-events.txt
-events.txt
-help.txt
-events.txt
-events.txt
-*.txt
-events.txt
-events.txt
-events.txt
-=======
 # https://git-scm.com/docs/gitignore
 #
 # Github keeps a useful collection of generic .gitignore files
 # https://github.com/github/gitignore
 
 *.txt
->>>>>>> origin/master
