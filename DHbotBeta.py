@@ -117,7 +117,7 @@ def on_member_join(newmember):
 	for x in admin_users:
 		admin_mentions += ' '+str(x.mention())
 	client.send_message(notification_channel, newmember.name + ' needs permissions. {}'.format(admin_mentions))
-#	client.send_message(newmember, 'Welcome to our Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible. In the meantime, you are free to use the lobby text chat and Public voice channels. Please be sure to read the announcements as well. You may also utilize some of my functions by responding to this message or, once you have permissions, by posting in the botbeta channel. To find a list of my functions, you may type !help.')
+	client.send_message(newmember, 'Welcome to our Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text chat and Public voice channels. If your Discord username is different from your in game GW2 name, please post in the lobby what your account name is so we can properly identify you. Please be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or, once you have permissions, by posting in the botbeta channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or Guild chat for assistance.')
 
 @client.event
 def on_message(message):
@@ -236,10 +236,24 @@ def on_message(message):
 				fractal_list[fractal_level].append(message.author.name)
 				with open('fractal.txt', 'w') as g:
 					g.write(str(json.dumps(fractal_list)))
-				client.send_message(message.channel, str(message.author.name) + ', you have been added to the fractal ' +str(fractal_level) + ' list.')
+				client.delete_message(message)
+				client.send_message(message.channel, str(message.author.name) + ', you have been added to the fractal level ' +str(fractal_level) + ' list.')
 			else:
 				client.send_message(message.channel, str(message.author.name) + ', you are already on that list.')
-
+		
+		if message.content.startswith('!remove_fractal'):
+			fractal_level = message.content.partition(' ')[2]
+			f = open('fractal.txt', 'r')
+			fractal_list = json.load(f)
+			f.close()
+			if message.author.name in fractal_list[fractal_level]:
+				fractal_list[fractal_level].remove(message.author.name)
+				with open('fractal.txt', 'w') as g:
+					g.write(str(json.dumps(fractal_list)))
+				client.delete_message(message)
+				client.send_message(message.channel, str(message.author.name) + ', you have been removed from the fractal level ' +str(fractal_level) + ' list.')
+			else:
+				client.send_message(message.channel, str(message.author.name) + ', you are not currently on the fractal level ' +str(fractal_level) + ' list.')
 
 	#@client.event
 	#def on_message(message):
