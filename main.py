@@ -3,13 +3,13 @@ import logging
 
 import discord
 
-from chatbot import chatbot
+from chatbot import Chatbot
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
 
 # Create a new instance of a chatbot object
-bot = chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt')
+bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt')
 
 # Initialize client object, begin connection
 client = discord.Client()

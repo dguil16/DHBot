@@ -5,7 +5,7 @@ import requests
 import dice
 import discord
 
-class chatbot(object):
+class Chatbot(object):
 	"""docstring for chatbot"""
 
 	def __init__(self, credential_location, event_text_file, help_text_file, fractal_text_file):
@@ -91,7 +91,7 @@ class chatbot(object):
 			client.send_message(message.channel, text_file.read())
 			text_file.close()
 		elif query == 'write':
-			if check_role(message, 'BotManager') == True:
+			if self.check_role(message, 'BotManager') == True:
 				text_file = open(location, 'w')
 				new_event_text = message.content.partition(' ')[2]
 				trim_event_text = new_event_text[0:1999]
@@ -103,7 +103,7 @@ class chatbot(object):
 				client.send_message(message.channel, 'You do not have permission to edit the ' + str(file_name) + ' message.')
 
 	def clear(self, client, message):
-		if check_role(message, 'Admin') == True:
+		if self.check_role(message, 'Admin') == True:
 			chan_name = message.content.partition(' ')[2]
 			chan = discord.utils.find(lambda m: m.name == chan_name, message.channel.server.channels)
 			for x in client.logs_from(chan):
