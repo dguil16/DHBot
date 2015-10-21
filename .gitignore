@@ -4,3 +4,5 @@
 # https://github.com/github/gitignore
 
 *.txt
+*.txt~
+*pycache*

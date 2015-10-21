@@ -161,7 +161,7 @@ class Chatbot(object):
 		search = message.content.partition(' ')[2].replace(' ','+')
 		client.send_message(message.channel, 'http://lmgtfy.com/?q='+search)
 
-	def price(self, message):
+	def price(self, client, message):
 		item_name = message.content.partition(' ')[2]
 		response1 = requests.get("http://www.gw2spidy.com/api/v0.9/json/item-search/"+item_name)
 		item_results = json.loads(response1.text)
