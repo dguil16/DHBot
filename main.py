@@ -3,13 +3,13 @@ import logging
 
 import discord
 
-from . import chatbot
+from chatbot import chatbot
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
 
 # Create a new instance of a chatbot object
-bot = chatbot.Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt')
+bot = chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt')
 
 # Initialize client object, begin connection
 client = discord.Client()
@@ -36,10 +36,13 @@ def on_member_join(newmember):
 @client.event
 def on_message(message):
 	if bot.check_role(message, 'BotBan') == False:
+		if message.content.startswith('!clear'):
+			bot.clear(client, message)
+
 		if message.content.startswith('!events'):
 			bot.file_interface(client, message, 'events', 'read')
 
-		if message.content.startswith('!events_edit'):
+		if message.content.startswith('!edit_events'):
 			bot.file_interface(client, message, 'events', 'write')
 
 		if message.content.startswith('!fractal'):

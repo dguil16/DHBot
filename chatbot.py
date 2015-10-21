@@ -64,10 +64,10 @@ class chatbot(object):
 			return (event_time - now)
 
 	def check_role(self, message_or_member, role_test):
-		if type(message_or_member) == 'Message':
-			message = message_or_member
-			mem = discord.utils.find(lambda m: m.id == message.author.id, message.channel.server.members)
-		elif type(message_or_member) == 'Member':
+		if isinstance(message_or_member, discord.message.Message) == True:
+			msg = message_or_member
+			mem = discord.utils.find(lambda m: m.id == msg.author.id, msg.channel.server.members)
+		elif isinstance(message_or_member, (discord.user.User)) == True:
 			member = message_or_member
 			mem = discord.utils.find(lambda m: m.id == member.id, member.server.members)
 
@@ -101,6 +101,15 @@ class chatbot(object):
 				client.send_message(message.channel, str(message.author) +' has updated the ' + str(file_name) + ' message.')
 			else:
 				client.send_message(message.channel, 'You do not have permission to edit the ' + str(file_name) + ' message.')
+
+	def clear(self, client, message):
+		if check_role(message, 'Admin') == True:
+			chan_name = message.content.partition(' ')[2]
+			chan = discord.utils.find(lambda m: m.name == chan_name, message.channel.server.channels)
+			for x in client.logs_from(chan):
+				client.delete_message(x)
+		else:
+			client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name +'.')
 
 	def fractal(self, client, message, query):
 		fractal_level = message.content.partition(' ')[2]
