@@ -72,9 +72,11 @@ class chatbot(object):
 			return (event_time - now)
 
 	def check_role(self, message_or_member, role_test):
-		if type(message_or_member) == message:
+		if type(message_or_member) == Message:
+			message = message_or_member
 			mem = discord.utils.find(lambda m: m.id == message.author.id, message.channel.server.members)
-		elif type(message_or_member) == member:
+		elif type(message_or_member) == Member:
+			member = message_or_member
 			mem = discord.utils.find(lambda m: m.id == member.id, member.server.members)
 
 		user_roles = []
