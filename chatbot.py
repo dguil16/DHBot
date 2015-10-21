@@ -8,10 +8,11 @@ import discord
 class chatbot(object):
 	"""docstring for chatbot"""
 
-	def __init__(self, credential_location, event_text_file, help_text_file):
-		self.credential_location
-		self.event_text_file
-		self.help_text_file
+	def __init__(self, credential_location, event_text_file, help_text_file, fractal_text_file):
+		self.credential_location = credential_location
+		self.event_text_file = event_text_file
+		self.help_text_file = help_text_file
+		self.fractal_text_file = fractal_text_file
 
 	def _weekly_event(self, event_day, event_hour, event_minute):
 		"""
@@ -79,59 +80,63 @@ class chatbot(object):
 		else:
 			return False
 
-	def file_read(self, client, message, file_name):
+	def file_interface(self, client, message, file_name, query):
 		if file_name == 'events':
 			location = self.event_text_file
 		elif file_name == 'help':
 			location = self.help_text_file
 
-		text_file = open(location, 'r')
-		client.send_message(message.channel, text_file.read())
-		text_file.close()
-
-	def file_edit(self, client, message, file_name):
-		if file_name == 'events':
-			location = self.event_text_file
-		elif file_name == 'help':
-			location = self.help_text_file
-
-		if check_role(message, 'BotManager') == True:
-			text_file = open(location, 'w')
-			new_event_text = message.content.partition(' ')[2]
-			trim_event_text = new_event_text[0:1999]
-			text_file.write(trim_event_text)
+		if query == 'read':
+			text_file = open(location, 'r')
+			client.send_message(message.channel, text_file.read())
 			text_file.close()
-			client.delete_message(message)
-			client.send_message(message.channel, str(message.author) +' has updated the ' + str(file_name) + ' message.')
-		else:
-			client.send_message(message.channel, 'You do not have permission to edit the ' + str(file_name) + ' message.')
+		elif query == 'write':
+			if check_role(message, 'BotManager') == True:
+				text_file = open(location, 'w')
+				new_event_text = message.content.partition(' ')[2]
+				trim_event_text = new_event_text[0:1999]
+				text_file.write(trim_event_text)
+				text_file.close()
+				client.delete_message(message)
+				client.send_message(message.channel, str(message.author) +' has updated the ' + str(file_name) + ' message.')
+			else:
+				client.send_message(message.channel, 'You do not have permission to edit the ' + str(file_name) + ' message.')
 
-	def fractal(self, client, message):
+	def fractal(self, client, message, query):
 		fractal_level = message.content.partition(' ')[2]
-		f = open('fractal.txt', 'r')
+		f = open(self.fractal_text_file, 'r')
 		fractal_list = json.load(f)
 		f.close()
-		fractal_members = []
-		for x in fractal_list[fractal_level]:
-			user = discord.utils.find(lambda m: m.name == x, message.channel.server.members)
-			fractal_members += [user]
-		fractal_mentions = ''
-		for x in fractal_members:
-			fractal_mentions += str(x.mention()) + ' '
-		client.send_message(message.channel, 'Would you like to do a 50 fractal? ' + str(fractal_mentions))
 
-	def fractal_add(self, client, message):
-		fractal_level = message.content.partition(' ')[2]
-		f = open('fractal.txt', 'r')
-		fractal_list = json.load(f)
-		f.close()
-		if message.author.name not in fractal_list[fractal_level]:
-			fractal_list[fractal_level].append(message.author.name)
-			with open('fractal.txt', 'w') as g:
-				g.write(str(json.dumps(fractal_list)))
-			client.send_message(message.channel, str(message.author.name) + ', you have been added to the fractal ' +str(fractal_level) + ' list.')
-		else:
-			client.send_message(message.channel, str(message.author.name) + ', you are already on that list.')
+		if query == 'send':
+			fractal_members = []
+			fractal_mentions = ''
+			for x in fractal_list[fractal_level]:
+				user = discord.utils.find(lambda m: m.name == x, message.channel.server.members)
+				fractal_members += [user]
+			for x in fractal_members:
+				fractal_mentions += str(x.mention()) + ' '
+			client.send_message(message.channel, 'Would you like to do a ' + str(fractal_level) + ' fractal? ' + str(fractal_mentions))
+
+		elif query == 'add':
+			if message.author.name not in fractal_list[fractal_level]:
+				fractal_list[fractal_level].append(message.author.name)
+				with open(self.fractal_text_file, 'w') as g:
+					g.write(str(json.dumps(fractal_list)))
+				client.delete_message(message)
+				client.send_message(message.channel, str(message.author.name) + ', you have been added to the fractal ' +str(fractal_level) + ' list.')
+			else:
+				client.send_message(message.channel, str(message.author.name) + ', you are already on that list.')
+
+		elif query == 'remove':
+			if message.author.name in fractal_list[fractal_level]:
+				fractal_list[fractal_level].remove(message.author.name)
+				with open(self.fractal_text_file, 'w') as g:
+					g.write(str(json.dumps(fractal_list)))
+				client.delete_message(message)
+				client.send_message(message.channel, str(message.author.name) + ', you have been removed from the fractal level ' +str(fractal_level) + ' list.')
+			else:
+				client.send_message(message.channel, str(message.author.name) + ', you are not currently on the fractal level ' +str(fractal_level) + ' list.')
 
 	def get_bot_credential(self, credential):
 		""" Extracts the paramater credential from a formatted text file """
@@ -168,10 +173,10 @@ class chatbot(object):
 	def roll_dice(self, client, message):
 		droll = message.content.partition(' ')[2]
 		clean = droll.split('d')
-		if 0 < int(clean[0]) < 51 and 0 < int(clean[1]) < 1000:
+		if 0 < int(clean[0]) < 51 and 0 < int(clean[1]) < 1001:
 			client.send_message(message.channel, str(dice.roll(droll)))
 		else:
-			client.send_message(message.channel, 'Not an appropriate amount of dice.')
+			client.send_message(message.channel, 'Not an appropriate amount or size of dice.')
 
 	def stop_bot(self, client, message):
 		if self.check_role(message, 'BotManager') == True:
