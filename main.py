@@ -8,19 +8,7 @@ import dice
 import discord
 import gw2api
 
-##################
-# Global variables
-##################
-
-EVENT_TEXT_FILE = "events.txt"
-HELP_TEXT_FILE = 'help.txt'
-
-#Functions
-def get_bot_credential(credential):
-	x = open('BotCred.txt', 'r')
-	bot_json = json.load(x)
-	x.close()
-	return bot_json[credential]
+import chatbot
 
 def check_role(message, role_test):
 	mem = discord.utils.find(lambda m: m.id == message.author.id, message.channel.server.members)
@@ -44,62 +32,15 @@ def check_user_role(member, role_test):
 	else:
 		return False
 
-
-def weekly_event(event_day, event_hour, event_minute):
-	"""
-	This function computes the timedelta for events that occur weekly.
-
-	event_day is an integer between 0 and 6, where 0 is monday and 6 is sunday.
-	event_hour is an integer between 0 and 23
-	event_minute is an integer between 0 and 59
-
-	Provide these times in UTC
-
-	event_time is a datetime object. The day is initially set to be the same as the current day.
-	This value is then altered based on a comparison with event_day, due to the lack of 
-	support for days of the week.
-	"""
-	now = datetime.datetime.utcnow()
-	event_time = datetime.datetime(now.year, now.month, now.day, hour=event_hour, minute=event_minute)
-
-	if event_day > now.weekday():
-		x = event_day - now.weekday()
-		event_time = event_time + datetime.timedelta(days=x)
-		return (event_time - now)
-	elif event_day < now.weekday():
-		x = abs(event_day - now.weekday())
-		event_time = event_time + datetime.timedelta(days=(7-x))
-		return (event_time - now)
-	elif event_day == now.weekday():
-		if event_time.hour > now.hour:
-			return (event_time - now)
-		elif event_time.hour < now.hour:
-			event_time = event_time + datetime.timedelta(days=7)
-			return (event_time - now)
-		elif event_time.hour == now.hour:
-			if event_time.minute > now.minute:
-				return (event_time - now)
-			elif event_time.minute == now.minute or event_time.minute < now.minute:
-				event_time = event_time + datetime.timedelta(days=7)
-				return (event_time - now)
-
-def daily_event(event_hour, event_minute):
-	now = datetime.datetime.utcnow()
-	event_time = datetime.datetime(now.year, now.month, now.day, hour=event_hour, minute=event_minute)
-
-	if event_time > now:
-		return (event_time - now)
-	elif event_time == now or event_time < now:
-		event_time = event_time + datetime.timedelta(days=1)
-		return (event_time - now)
-
-
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
 
+# Create a new instance of a chatbot object
+bot = chatbot.chatbot('BotCred.txt', 'events.txt', 'help.txt')
+
 # Initialize client object, begin connection
 client = discord.Client()
-client.login(get_bot_credential('Username'), get_bot_credential('Password'))
+client.login(bot.get_bot_credential('Username'), bot.get_bot_credential('Password'))
 
 if not client.is_logged_in:
 	print('Logging in to Discord failed')
