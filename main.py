@@ -1,36 +1,9 @@
-import datetime
-import json
-import logging
-import os
-import requests
 
-import dice
+import logging
+
 import discord
-import gw2api
 
 import chatbot
-
-def check_role(message, role_test):
-	mem = discord.utils.find(lambda m: m.id == message.author.id, message.channel.server.members)
-	user_roles = []
-	for x in mem.roles:
-		user_roles.append(x.name)
-
-	if role_test in user_roles:
-		return True
-	else:
-		return False
-
-def check_user_role(member, role_test):
-	mem = discord.utils.find(lambda m: m.id == member.id, member.server.members)
-	user_roles = []
-	for x in mem.roles:
-		user_roles.append(x.name)
-
-	if role_test in user_roles:
-		return True
-	else:
-		return False
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
@@ -51,7 +24,7 @@ if not client.is_logged_in:
 def on_member_join(newmember):
 	admin_users = []
 	for x in newmember.server.members:
-		if check_user_role(x, 'Admin') == True:
+		if bot.check_role(x, 'Admin') == True:
 			admin_users += [x]
 	notification_channel = discord.utils.find(lambda m: m.name == 'botbeta', newmember.server.channels)
 	admin_mentions = ''
@@ -62,87 +35,51 @@ def on_member_join(newmember):
 
 @client.event
 def on_message(message):
-	if check_role(message, 'BotBan') == False:
+	if bot.check_role(message, 'BotBan') == False:
 		if message.content.startswith('!events'):
-			text_file = open(EVENT_TEXT_FILE, 'r')
-			client.send_message(message.channel, text_file.read())
-			text_file.close()
+			bot.file_read(client, message, 'events')
 
 		if message.content.startswith('!events_edit'):
-			if check_role(message, 'BotManager') == True:
-				text_file = open(EVENT_TEXT_FILE, 'w')
-				new_event_text = message.content.partition(' ')[2]
-				trim_event_text = new_event_text[0:1999]
-				text_file.write(trim_event_text)
-				text_file.close()
-				client.delete_message(message)
-				client.send_message(message.channel, str(message.author) +' has updated the event message.')
-			else:
-				client.send_message(message.channel, 'You do not have permission to edit the event message.')
+			bot.file_edit(client, message, 'events')
+
+		if message.content.startswith('!fractal'):
+			bot.fractal(client, message)
+
+		if message.content.startswith('!fractal_add'):
+			bot.fractal_add(client, message)
 
 		if message.content.startswith('!hello'):
-			client.send_message(message.channel, 'Hello {}!'.format(message.author.mention()))
+			bot.greet(client, message)
 
 		if message.content.startswith('!help'):
-			text_file = open(HELP_TEXT_FILE, 'r')
-			client.send_message(message.channel, str(text_file.read()))
-			text_file.close()
+			bot.file_read(client, message, 'help')
+
+		if message.content.startswith('!help_edit'):
+			bot.file_edit(client, message, 'help')
 
 		if message.content.startswith('!price'):
-			item_name = message.content.partition(' ')[2]
-			response1 = requests.get("http://www.gw2spidy.com/api/v0.9/json/item-search/"+item_name)
-			item_results = json.loads(response1.text)
-			testresults = item_results['results']
-			for x in range(len(testresults)):
-				if str(item_name).lower() == str(testresults[x]['name']).lower():
-					itemid = testresults[x]['data_id']
-			response2 = requests.get("https://api.guildwars2.com/v2/commerce/prices/"+str(itemid))
-			listing = json.loads(response2.text)
-			buy_price_raw = listing['buys']['unit_price']
-			sell_price_raw = listing['sells']['unit_price']
-			bsilver, bcopper = divmod(buy_price_raw, 100)
-			bgold, bsilver = divmod(bsilver, 100)
-			ssilver, scopper = divmod(sell_price_raw, 100)
-			sgold, ssilver = divmod(ssilver, 100)
-			client.send_message(message.channel, 'The current buy price of ' +item_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
+			bot.price(client, message)
 
 		if message.content.startswith('!timetohot'):
-			time_remaining = datetime.datetime(2015, 10, 23,2,1) - datetime.datetime.now()
-			m, s = divmod(time_remaining.seconds, 60)
-			h, m = divmod(m, 60)
-			client.send_message(message.channel, 'The time remaining to HoT launch is: ' +str(time_remaining.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
+			bot.time_to_hot(client, message)
 
 		if message.content.startswith('!timetomissions'):
-			mission_time_delta = weekly_event(6, 1, 10)
-			m, s = divmod(mission_time_delta.seconds, 60)
-			h, m = divmod(m, 60)
-			client.send_message(message.channel, 'Time remaining until guild missions: ' +str(mission_time_delta.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.\n Meet in Queensdale!')
+			bot.time_to_missions(client, message)
 
 		if message.content.startswith('!timetoreset'):
-			reset_time_delta = daily_event(0, 0)
-			m, s = divmod(reset_time_delta.seconds, 60)
-			h, m = divmod(m, 60)
-			client.send_message(message.channel, 'Time remaining until reset: ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
+			bot.time_to_reset(client, message)
 
 		if message.content.startswith('!timetowvwreset'):
-			wvw_time_delta = weekly_event(5, 0, 0)
-			m, s = divmod(wvw_time_delta.seconds, 60)
-			h, m = divmod(m, 60)
-			client.send_message(message.channel, 'Time remaining until WvW reset: ' + str(wvw_time_delta.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
+			bot.time_to_wvw_reset(client, message)
 
 		if message.content.startswith('!lmgtfy'):
-			search = message.content.partition(' ')[2].replace(' ','+')
-			client.send_message(message.channel, 'http://lmgtfy.com/?q='+search)
+			bot.lmgtfy(client, message)
 
 		if message.content.startswith('!wiki'):
-			search = message.content.partition(' ')[2].replace(' ', '_')
-			client.send_message(message.channel, 'http://wiki.guildwars2.com/wiki/Special:Search/'+search)
+			bot.wiki(client, message)
 
 		if message.content.startswith('!quit'):
-			if check_role(message, 'BotManager') == True:
-				client.logout()
-			else:
-				client.send_message(message.channel, 'You do not have permission to stop DHBot.')
+			bot.stop_bot(client, message)
 
 		if message.content.startswith('!worldbosses'):
 			pass
@@ -151,35 +88,7 @@ def on_message(message):
 			client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')
 
 		if message.content.startswith('!roll'):
-			droll = message.content.partition(' ')[2]
-			client.send_message(message.channel, str(dice.roll(droll)))
-
-		if message.content.startswith('!fractal'):
-			fractal_level = message.content.partition(' ')[2]
-			f = open('fractal.txt', 'r')
-			fractal_list = json.load(f)
-			f.close()
-			fractal_members = []
-			for x in fractal_list[fractal_level]:
-				user = discord.utils.find(lambda m: m.name == x, message.channel.server.members)
-				fractal_members += [user]
-			fractal_mentions = ''
-			for x in fractal_members:
-				fractal_mentions += str(x.mention()) + ' '
-			client.send_message(message.channel, 'Would you like to do a 50 fractal? ' + str(fractal_mentions))
-
-		if message.content.startswith('!add_fractal'):
-			fractal_level = message.content.partition(' ')[2]
-			f = open('fractal.txt', 'r')
-			fractal_list = json.load(f)
-			f.close()
-			if message.author.name not in fractal_list[fractal_level]:
-				fractal_list[fractal_level].append(message.author.name)
-				with open('fractal.txt', 'w') as g:
-					g.write(str(json.dumps(fractal_list)))
-				client.send_message(message.channel, str(message.author.name) + ', you have been added to the fractal ' +str(fractal_level) + ' list.')
-			else:
-				client.send_message(message.channel, str(message.author.name) + ', you are already on that list.')
+			bot.roll_dice(client, message)
 
 
 	#@client.event
