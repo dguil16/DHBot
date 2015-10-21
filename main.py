@@ -42,16 +42,16 @@ def on_message(message):
 		if message.content.startswith('!events'):
 			bot.file_interface(client, message, 'events', 'read')
 
-		if message.content.startswith('!edit_events'):
+		if message.content.startswith('!edit-events'):
 			bot.file_interface(client, message, 'events', 'write')
 
 		if message.content.startswith('!fractal'):
 			bot.fractal(client, message, 'send')
 
-		if message.content.startswith('!add_fractal'):
+		if message.content.startswith('!add-fractal'):
 			bot.fractal(client, message, 'add')
 
-		if message.content.startswith('!remove_fractal'):
+		if message.content.startswith('!remove-fractal'):
 			bot.fractal(client, message, 'remove')
 
 		if message.content.startswith('!hello'):
@@ -60,7 +60,7 @@ def on_message(message):
 		if message.content.startswith('!help'):
 			bot.file_interface(client, message, 'help', 'read')
 
-		if message.content.startswith('!edit_help'):
+		if message.content.startswith('!edit-help'):
 			bot.file_interface(client, message, 'help', 'write')
 		
 		if message.content.startswith('!lmgtfy'):
