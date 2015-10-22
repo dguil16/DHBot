@@ -8,11 +8,12 @@ import discord
 class Chatbot(object):
 	"""docstring for chatbot"""
 
-	def __init__(self, credential_location, event_text_file, help_text_file, fractal_text_file):
+	def __init__(self, credential_location, event_text_file, help_text_file, fractal_text_file, mission_text_file):
 		self.credential_location = credential_location
 		self.event_text_file = event_text_file
 		self.help_text_file = help_text_file
 		self.fractal_text_file = fractal_text_file
+		self.mission_text_file = mission_text_file
 
 	def _weekly_event(self, event_day, event_hour, event_minute):
 		"""
@@ -104,9 +105,14 @@ class Chatbot(object):
 
 	def clear(self, client, message):
 		if self.check_role(message, 'Admin') == True:
-			chan_name = message.content.partition(' ')[2]
+			split_message = message.content.split(' ', 2)
+			chan_name = split_message[1]
 			chan = discord.utils.find(lambda m: m.name == chan_name, message.channel.server.channels)
+			message_list = []
 			for x in client.logs_from(chan):
+				message_list += [x]
+			list_to_delete = message_list[0:int(split_message[2])]
+			for x in list_to_delete:
 				client.delete_message(x)
 		else:
 			client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name +'.')
@@ -161,6 +167,12 @@ class Chatbot(object):
 		search = message.content.partition(' ')[2].replace(' ','+')
 		client.send_message(message.channel, 'http://lmgtfy.com/?q='+search)
 
+	def mission(self, client, message):
+		mission = message.content.partition(' ' )[2]
+		with open('mission.txt', 'r') as f:
+			mission_data = json.load(f)
+		client.send_message(message.channel, mission_data[mission])	
+
 	def price(self, client, message):
 		item_name = message.content.partition(' ')[2]
 		response1 = requests.get("http://www.gw2spidy.com/api/v0.9/json/item-search/"+item_name)
@@ -178,6 +190,21 @@ class Chatbot(object):
 		ssilver, scopper = divmod(sell_price_raw, 100)
 		sgold, ssilver = divmod(ssilver, 100)
 		client.send_message(message.channel, 'The current buy price of ' +item_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
+
+	def purge(self, client, message):
+		if self.check_role(message, 'Admin') == True:
+			split_message = message.content.split(' ', 2)
+			user_name = split_message[1]
+			user = discord.utils.find(lambda m: m.name == user_name, message.channel.server.members)
+			message_list = []
+			for x in client.logs_from(message.channel):
+				if x.author.name == user.name:
+					message_list += [x]
+			list_to_delete = message_list[0:int(split_message[2])]
+			for x in list_to_delete:
+				client.delete_message(x)
+		else:
+			client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name)
 
 	def roll_dice(self, client, message):
 		droll = message.content.partition(' ')[2]
