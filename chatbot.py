@@ -222,9 +222,12 @@ class Chatbot(object):
 
 	def time_to_hot(self, client, message):
 		time_remaining = datetime.datetime(2015, 10, 23, 7, 1) - datetime.datetime.utcnow()
-		m, s = divmod(time_remaining.seconds, 60)
-		h, m = divmod(m, 60)
-		client.send_message(message.channel, 'The time remaining to HoT launch is: ' +str(time_remaining.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
+		if time_remaining.seconds<0 or time_remaining.days<0 or time_remaining.microseconds<0:
+			client.send_message(message.channel, 'HoT is live! Why are you asking me instead of playing?')
+		else:
+			m, s = divmod(time_remaining.seconds, 60)
+			h, m = divmod(m, 60)
+			client.send_message(message.channel, 'The time remaining to HoT launch is: ' +str(time_remaining.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
 
 	def time_to_missions(self, client, message):
 		mission_time_delta = self._weekly_event(6, 1, 10)
