@@ -9,7 +9,7 @@ from chatbot import Chatbot
 logging.basicConfig()
 
 # Create a new instance of a chatbot object
-bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt')
+bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt')
 
 # Initialize client object, begin connection
 client = discord.Client()
@@ -66,8 +66,17 @@ def on_message(message):
 		if message.content.startswith('!lmgtfy'):
 			bot.lmgtfy(client, message)
 
+		if message.content.startswith('!mission'):
+			bot.mission(client, message)
+
 		if message.content.startswith('!price'):
 			bot.price(client, message)
+
+		if message.content.startswith('!purge'):
+			bot.purge(client, message)
+
+		if message.content.startswith('!timetoraid'):
+			pass
 
 		if message.content.startswith('!timetohot'):
 			bot.time_to_hot(client, message)
@@ -97,16 +106,6 @@ def on_message(message):
 		if '(╯°□°）╯︵ ┻━┻' in message.content:
 			client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')
 
-
-	#@client.event
-	#def on_message(message):
-	#	if message.content.startswith('!id'):
-	#		item_name = message.content.partition(' ')[2]
-	#		response = requests.get("http://www.gw2spidy.com/api/v0.9/json/item-search/"+item_name)
-	#		item_results = json.loads(response.text)
-	#		item_id = item_results['results'][0]['data_id']
-	#		client.send_message(message.channel, item_id)
-		
 
 @client.event
 def on_ready():
