@@ -26,7 +26,7 @@ def on_member_join(newmember):
 	for x in newmember.server.members:
 		if bot.check_role(x, 'Admin') == True:
 			admin_users += [x]
-	notification_channel = discord.utils.find(lambda m: m.name == 'botbeta', newmember.server.channels)
+	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', newmember.server.channels)
 	admin_mentions = ''
 	for x in admin_users:
 		admin_mentions += ' '+str(x.mention())
@@ -74,6 +74,9 @@ def on_message(message):
 
 		if message.content.startswith('!purge'):
 			bot.purge(client, message)
+
+		if message.content.startswith('!remindme'):
+			bot.reminder(client, message)
 
 		if message.content.startswith('!timetoraid'):
 			pass
