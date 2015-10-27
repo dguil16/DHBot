@@ -57,7 +57,7 @@ class Chatbot(object):
 					event_time = event_time + datetime.timedelta(days=7)
 					return (event_time - now)
 	
-	def _daily_event(sef, event_hour, event_minute):
+	def _daily_event(self, event_hour, event_minute):
 		""" Like weekly_event, but for an event that repeats daily """
 		now = datetime.datetime.utcnow()
 		event_time = datetime.datetime(now.year, now.month, now.day, hour=event_hour, minute=event_minute)
@@ -264,3 +264,55 @@ class Chatbot(object):
 	def wiki(self, client, message):
 		search = message.content.partition(' ')[2].replace(' ', '_')
 		client.send_message(message.channel, 'http://wiki.guildwars2.com/wiki/Special:Search/'+search)
+
+	def poll(self, client, message, query):
+		poll_query = message.content.partition(' ')[2]
+		poll_name = poll_query.split('; ')[0]
+		f = open('polls.txt', 'r')
+		all_polls = json.load(f)
+		f.close()
+		
+		if query == 'create':
+			poll_desc = poll_query.split('; ')[1]
+			poll_opt = poll_query.split('; ')[2]
+			option_list = poll_opt.split(', ')
+			if poll_name in all_polls["Names"]:
+				client.send_message(message.channel, 'There is already a poll with that name.')
+			else:
+				all_polls["Names"].append(poll_name)
+				vote_list = {}
+				for x in option_list:
+					vote_list[x] = 0
+				poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[]}
+				all_polls[poll_name] = poll_content
+				f = open('polls.txt', 'w')
+				f.write(str(json.dumps(all_polls)))
+				f.close()
+
+		if query == 'delete':
+			all_polls["Names"].remove(poll_name)
+			del all_polls[poll_name]
+			f = open('polls.txt', 'w')
+			f.write(str(json.dumps(all_polls)))
+			f.close()
+
+		if query == 'vote':
+			if message.author.name in all_polls[poll_name]["Voters"]:
+				client.send_message(message.channel, 'You have already voted in this poll.')
+			else:
+				all_polls[poll_name]["Voters"].append(message.author.name)
+				vote = poll_query.split('; ')[1]
+				all_polls[poll_name]["Votes"][vote] += 1
+				f = open('polls.txt', 'w')
+				f.write(str(json.dumps(all_polls)))
+				f.close()
+
+		if query == 'list':
+			client.send_message(message.channel, 'The current polls are: ' +str(all_polls["Names"]))
+
+		if query == 'info':
+			client.send_message(message.channel, 'The description of  ' + poll_name + ' is:\n\n' + all_polls[poll_name]["Description"] + '\n\nThe options for this poll are: \n\n' + all_polls[poll_name]["Options"])
+
+		if query == 'results':
+			client.send_message(message.channel, 'The current vote totals are as follows:\n\n' + str(all_polls[poll_name]["Votes"]))
+				

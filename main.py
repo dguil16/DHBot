@@ -69,6 +69,24 @@ def on_message(message):
 		if message.content.startswith('!mission'):
 			bot.mission(client, message)
 
+		if message.content.startswith('!create-poll'):
+			bot.poll(client, message, 'create')
+
+		if message.content.startswith('!poll-info'):
+			bot.poll(client, message, 'info')
+
+		if message.content.startswith('!delete-poll'):
+			bot.poll(client, message, 'delete')
+
+		if message.content.startswith('!vote'):
+			bot.poll(client, message, 'vote')
+
+		if message.content.startswith('!list-polls'):
+			bot.poll(client, message, 'list')
+
+		if message.content.startswith('!poll-results'):
+			bot.poll(client, message, 'results')
+
 		if message.content.startswith('!price'):
 			bot.price(client, message)
 
