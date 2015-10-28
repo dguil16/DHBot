@@ -1,9 +1,15 @@
+#!/usr/bin/env python
 
+import os
+import sys
+from os.path import getmtime
 import logging
 
 import discord
 
 from chatbot import Chatbot
+
+
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
@@ -136,3 +142,5 @@ def on_ready():
 	print('------')
 
 client.run()
+
+#testing
