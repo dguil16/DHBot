@@ -268,30 +268,36 @@ class Chatbot(object):
 			f.close()
 			
 			if query == 'create':
-				poll_desc = poll_query.split('; ')[1]
-				poll_opt = poll_query.split('; ')[2]
-				option_list = poll_opt.split(', ')
-				if poll_name in all_polls["Names"]:
-					client.send_message(message.channel, 'There is already a poll with that name.')
+				if self.check_role(message, 'Leadership') == True:
+					poll_desc = poll_query.split('; ')[1]
+					poll_opt = poll_query.split('; ')[2]
+					option_list = poll_opt.split(', ')
+					if poll_name in all_polls["Names"]:
+						client.send_message(message.channel, 'There is already a poll with that name.')
+					else:
+						all_polls["Names"].append(poll_name)
+						vote_list = {}
+						for x in option_list:
+							vote_list[x] = 0
+						poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[]}
+						all_polls[poll_name] = poll_content
+						f = open('polls.txt', 'w')
+						f.write(str(json.dumps(all_polls)))
+						f.close()
+						client.send_message(message.channel, 'The poll \"' + poll_name +'\" has been created.')
 				else:
-					all_polls["Names"].append(poll_name)
-					vote_list = {}
-					for x in option_list:
-						vote_list[x] = 0
-					poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[]}
-					all_polls[poll_name] = poll_content
+					client.send_message(message.channel, 'You do not haver permission to create polls at this time.')
+
+			if query == 'delete':
+				if self.check_role(message, 'Leadership') == True:
+					all_polls["Names"].remove(poll_name)
+					del all_polls[poll_name]
 					f = open('polls.txt', 'w')
 					f.write(str(json.dumps(all_polls)))
 					f.close()
-					client.send_message(message.channel, 'The poll \"' + poll_name +'\" has been created.')
-
-			if query == 'delete':
-				all_polls["Names"].remove(poll_name)
-				del all_polls[poll_name]
-				f = open('polls.txt', 'w')
-				f.write(str(json.dumps(all_polls)))
-				f.close()
-				client.send_message(message.channel, 'The poll \"' + poll_name + '\" has been deleted.')
+					client.send_message(message.channel, 'The poll \"' + poll_name + '\" has been deleted.')
+				else:
+					client.send_message(message.channel, 'You do not haver permission to delete this poll.')
 
 			if query == 'vote':
 				if message.author.name in all_polls[poll_name]["Voters"]:
