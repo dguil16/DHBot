@@ -213,14 +213,14 @@ class Chatbot(object):
 		else:
 			client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name)
 
-	def reminder(self, client, message):
-		scheduler = sched.scheduler(time.time, time.sleep)
-		rem = message.content.partition(' ')[2]
-		rtime = rem.partition(',')[0]
-		rmess = rem.partition(',')[2]
-		rtime_form = datetime.strptime(rtime, '%b %d %Y %I:%M%p')
-		delay = rtime_form - datetime.now()
-		task1 = scheduler.enter(delay.total_seconds(), 1, client.send_message(message.author, rmess))
+#	def reminder(self, client, message):
+#		scheduler = sched.scheduler(time.time, time.sleep)
+#		rem = message.content.partition(' ')[2]
+#		rtime = rem.partition(',')[0]
+#		rmess = rem.partition(',')[2]
+#		rtime_form = datetime.strptime(rtime, '%b %d %Y %I:%M%p')
+#		delay = rtime_form - datetime.now()
+#		task1 = scheduler.enter(delay.total_seconds(), 1, client.send_message(message.author, rmess))
 
 
 	def roll_dice(self, client, message):

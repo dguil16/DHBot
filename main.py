@@ -99,8 +99,8 @@ def on_message(message):
 		if message.content.startswith('!purge'):
 			bot.purge(client, message)
 
-		if message.content.startswith('!remindme'):
-			bot.reminder(client, message)
+#		if message.content.startswith('!remindme'):
+#			bot.reminder(client, message)
 
 		if message.content.startswith('!timetoraid'):
 			pass
