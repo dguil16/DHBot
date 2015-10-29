@@ -1,6 +1,10 @@
 import datetime
+from datetime import datetime
 import json
 import requests
+import sched
+import threading
+import time
 
 import dice
 import discord
@@ -53,7 +57,7 @@ class Chatbot(object):
 					event_time = event_time + datetime.timedelta(days=7)
 					return (event_time - now)
 	
-	def _daily_event(sef, event_hour, event_minute):
+	def _daily_event(self, event_hour, event_minute):
 		""" Like weekly_event, but for an event that repeats daily """
 		now = datetime.datetime.utcnow()
 		event_time = datetime.datetime(now.year, now.month, now.day, hour=event_hour, minute=event_minute)
@@ -161,7 +165,7 @@ class Chatbot(object):
 		return bot_json[credential]
 
 	def greet(self, client, message):
-		client.send_message(message.channel, 'Hello {}!'.format(message.author.mention()))
+		client.send_message(message.channel, 'Howdy {}!'.format(message.author.mention()))
 
 	def lmgtfy(self, client, message):
 		search = message.content.partition(' ')[2].replace(' ','+')
@@ -174,22 +178,25 @@ class Chatbot(object):
 		client.send_message(message.channel, mission_data[mission])	
 
 	def price(self, client, message):
-		item_name = message.content.partition(' ')[2]
-		response1 = requests.get("http://www.gw2spidy.com/api/v0.9/json/item-search/"+item_name)
-		item_results = json.loads(response1.text)
-		testresults = item_results['results']
-		for x in range(len(testresults)):
-			if str(item_name).lower() == str(testresults[x]['name']).lower():
-				itemid = testresults[x]['data_id']
-		response2 = requests.get("https://api.guildwars2.com/v2/commerce/prices/"+str(itemid))
-		listing = json.loads(response2.text)
-		buy_price_raw = listing['buys']['unit_price']
-		sell_price_raw = listing['sells']['unit_price']
-		bsilver, bcopper = divmod(buy_price_raw, 100)
-		bgold, bsilver = divmod(bsilver, 100)
-		ssilver, scopper = divmod(sell_price_raw, 100)
-		sgold, ssilver = divmod(ssilver, 100)
-		client.send_message(message.channel, 'The current buy price of ' +item_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
+		try:
+			item_name = message.content.partition(' ')[2]
+			response1 = requests.get("http://www.gw2spidy.com/api/v0.9/json/item-search/"+item_name)
+			item_results = json.loads(response1.text)
+			testresults = item_results['results']
+			for x in range(len(testresults)):
+				if str(item_name).lower() == str(testresults[x]['name']).lower():
+					itemid = testresults[x]['data_id']
+			response2 = requests.get("https://api.guildwars2.com/v2/commerce/prices/"+str(itemid))
+			listing = json.loads(response2.text)
+			buy_price_raw = listing['buys']['unit_price']
+			sell_price_raw = listing['sells']['unit_price']
+			bsilver, bcopper = divmod(buy_price_raw, 100)
+			bgold, bsilver = divmod(bsilver, 100)
+			ssilver, scopper = divmod(sell_price_raw, 100)
+			sgold, ssilver = divmod(ssilver, 100)
+			client.send_message(message.channel, 'The current buy price of ' +item_name +' is ' +str(bgold).zfill(2) +'g ' +str(bsilver).zfill(2)+ 's ' +str(bcopper).zfill(2)+ 'c. \nThe current sell price is ' +str(sgold).zfill(2) +'g ' +str(ssilver).zfill(2)+ 's ' +str(scopper).zfill(2)+ 'c.')
+		except:
+			client.send_message(message.channel, 'There was an error processing your request.')
 
 	def purge(self, client, message):
 		if self.check_role(message, 'Admin') == True:
@@ -206,6 +213,16 @@ class Chatbot(object):
 		else:
 			client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name)
 
+#	def reminder(self, client, message):
+#		scheduler = sched.scheduler(time.time, time.sleep)
+#		rem = message.content.partition(' ')[2]
+#		rtime = rem.partition(',')[0]
+#		rmess = rem.partition(',')[2]
+#		rtime_form = datetime.strptime(rtime, '%b %d %Y %I:%M%p')
+#		delay = rtime_form - datetime.now()
+#		task1 = scheduler.enter(delay.total_seconds(), 1, client.send_message(message.author, rmess))
+
+
 	def roll_dice(self, client, message):
 		droll = message.content.partition(' ')[2]
 		clean = droll.split('d')
@@ -219,15 +236,6 @@ class Chatbot(object):
 			client.logout()
 		else:
 			client.send_message(message.channel, 'You do not have permission to stop DHBot.')
-
-	def time_to_hot(self, client, message):
-		time_remaining = datetime.datetime(2015, 10, 23, 7, 1) - datetime.datetime.utcnow()
-		if time_remaining.seconds<0 or time_remaining.days<0 or time_remaining.microseconds<0:
-			client.send_message(message.channel, 'HoT is live! Why are you asking me instead of playing?')
-		else:
-			m, s = divmod(time_remaining.seconds, 60)
-			h, m = divmod(m, 60)
-			client.send_message(message.channel, 'The time remaining to HoT launch is: ' +str(time_remaining.days) + ' days ' + str(h) + ' hours ' + str(m) + ' minutes ' + str(s) + ' seconds.')
 
 	def time_to_missions(self, client, message):
 		mission_time_delta = self._weekly_event(6, 1, 10)
@@ -250,3 +258,60 @@ class Chatbot(object):
 	def wiki(self, client, message):
 		search = message.content.partition(' ')[2].replace(' ', '_')
 		client.send_message(message.channel, 'http://wiki.guildwars2.com/wiki/Special:Search/'+search)
+
+	def poll(self, client, message, query):
+		try:
+			poll_query = message.content.partition(' ')[2]
+			poll_name = poll_query.split('; ')[0]
+			f = open('polls.txt', 'r')
+			all_polls = json.load(f)
+			f.close()
+			
+			if query == 'create':
+				poll_desc = poll_query.split('; ')[1]
+				poll_opt = poll_query.split('; ')[2]
+				option_list = poll_opt.split(', ')
+				if poll_name in all_polls["Names"]:
+					client.send_message(message.channel, 'There is already a poll with that name.')
+				else:
+					all_polls["Names"].append(poll_name)
+					vote_list = {}
+					for x in option_list:
+						vote_list[x] = 0
+					poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[]}
+					all_polls[poll_name] = poll_content
+					f = open('polls.txt', 'w')
+					f.write(str(json.dumps(all_polls)))
+					f.close()
+					client.send_message(message.channel, 'The poll \"' + poll_name +'\" has been created.')
+
+			if query == 'delete':
+				all_polls["Names"].remove(poll_name)
+				del all_polls[poll_name]
+				f = open('polls.txt', 'w')
+				f.write(str(json.dumps(all_polls)))
+				f.close()
+				client.send_message(message.channel, 'The poll \"' + poll_name + '\" has been deleted.')
+
+			if query == 'vote':
+				if message.author.name in all_polls[poll_name]["Voters"]:
+					client.send_message(message.channel, 'You have already voted in this poll.')
+				else:
+					all_polls[poll_name]["Voters"].append(message.author.name)
+					vote = poll_query.split('; ')[1]
+					all_polls[poll_name]["Votes"][vote] += 1
+					f = open('polls.txt', 'w')
+					f.write(str(json.dumps(all_polls)))
+					f.close()
+					client.send_message(message.channel, message.author.name + '\'s vote for ' + vote + ' has been recorded.')
+
+			if query == 'list':
+				client.send_message(message.channel, 'The current polls are: ' +str(all_polls["Names"]))
+
+			if query == 'info':
+				client.send_message(message.channel, 'The description of  ' + poll_name + ' is:\n\n' + all_polls[poll_name]["Description"] + '\n\nThe options for this poll are: \n\n' + all_polls[poll_name]["Options"])
+
+			if query == 'results':
+				client.send_message(message.channel, 'The current vote totals are as follows:\n\n' + str(all_polls[poll_name]["Votes"]))
+		except:
+			client.send_message(message.channel, 'There was an error in your request. Please try again.')

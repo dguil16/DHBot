@@ -1,9 +1,15 @@
+#!/usr/bin/env python
 
+import os
+import sys
+from os.path import getmtime
 import logging
 
 import discord
 
 from chatbot import Chatbot
+
+
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
@@ -26,7 +32,7 @@ def on_member_join(newmember):
 	for x in newmember.server.members:
 		if bot.check_role(x, 'Admin') == True:
 			admin_users += [x]
-	notification_channel = discord.utils.find(lambda m: m.name == 'botbeta', newmember.server.channels)
+	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', newmember.server.channels)
 	admin_mentions = ''
 	for x in admin_users:
 		admin_mentions += ' '+str(x.mention())
@@ -69,11 +75,32 @@ def on_message(message):
 		if message.content.startswith('!mission'):
 			bot.mission(client, message)
 
+		if message.content.startswith('!create-poll'):
+			bot.poll(client, message, 'create')
+
+		if message.content.startswith('!poll-info'):
+			bot.poll(client, message, 'info')
+
+		if message.content.startswith('!delete-poll'):
+			bot.poll(client, message, 'delete')
+
+		if message.content.startswith('!vote'):
+			bot.poll(client, message, 'vote')
+
+		if message.content.startswith('!list-polls'):
+			bot.poll(client, message, 'list')
+
+		if message.content.startswith('!poll-results'):
+			bot.poll(client, message, 'results')
+
 		if message.content.startswith('!price'):
 			bot.price(client, message)
 
 		if message.content.startswith('!purge'):
 			bot.purge(client, message)
+
+#		if message.content.startswith('!remindme'):
+#			bot.reminder(client, message)
 
 		if message.content.startswith('!timetoraid'):
 			pass
@@ -115,3 +142,5 @@ def on_ready():
 	print('------')
 
 client.run()
+
+#testing
