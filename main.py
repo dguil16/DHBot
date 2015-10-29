@@ -87,6 +87,9 @@ def on_message(message):
 		if message.content.startswith('!vote'):
 			bot.poll(client, message, 'vote')
 
+		if message.content.startswith('!admin-vote'):
+			bot.poll(client, message, 'admin')
+
 		if message.content.startswith('!list-polls'):
 			bot.poll(client, message, 'list')
 
