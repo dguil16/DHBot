@@ -311,6 +311,18 @@ class Chatbot(object):
 					f.close()
 					client.send_message(message.channel, message.author.name + '\'s vote for ' + vote + ' has been recorded.')
 
+			if query == 'admin':
+				if self.check_role(message, 'Admin') == True:
+					vote = poll_query.split('; ')[1]
+					adjustment = int(poll_query.split('; ')[2])
+					all_polls[poll_name]["Votes"][vote] += adjustment
+					f = open('polls.txt', 'w')
+					f.write(str(json.dumps(all_polls)))
+					f.close()
+					client.send_message(message.channel, message.author.name + ' has adjusted the vote for ' + vote + ' by ' + str(adjustment) + '.')
+				else:
+					client.send_message(message.channel, 'You do not have permission to use that function.')
+
 			if query == 'list':
 				client.send_message(message.channel, 'The current polls are: ' +str(all_polls["Names"]))
 
