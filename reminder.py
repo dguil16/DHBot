@@ -20,5 +20,5 @@ class Reminder(object):
 
 		seconds = hours*60*60 + minutes*60
 
-		t = threading.Timer(seconds, self.respond(client, message, text))
+		t = threading.Timer(seconds, self.respond, [client, message, text])
 		t.start()
