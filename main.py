@@ -43,7 +43,12 @@ def on_member_join(newmember):
 
 @client.event
 def on_message(message):
-	if bot.check_role(message, 'BotBan') == False:
+	if message.content.startswith('!help'):
+		bot.file_interface(client, message, 'help', 'read')
+	
+	elif isinstance(message.channel, discord.channel.PrivateChannel) == True:
+		pass
+	elif bot.check_role(message, 'BotBan') == False:
 		if message.content.startswith('!clear'):
 			bot.clear(client, message)
 
@@ -64,9 +69,6 @@ def on_message(message):
 
 		if message.content.startswith('!hello'):
 			bot.greet(client, message)
-
-		if message.content.startswith('!help'):
-			bot.file_interface(client, message, 'help', 'read')
 
 		if message.content.startswith('!edit-help'):
 			bot.file_interface(client, message, 'help', 'write')
