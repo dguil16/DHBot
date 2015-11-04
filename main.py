@@ -80,6 +80,12 @@ def on_message(message):
 		if message.content.startswith('!create-poll'):
 			bot.poll(client, message, 'create')
 
+		if message.content.startswith('!open-poll'):
+			bot.poll(client, message, 'open')
+
+		if message.content.startswith('!close-poll'):
+			bot.poll(client, message, 'close')
+
 		if message.content.startswith('!poll-info'):
 			bot.poll(client, message, 'info')
 
