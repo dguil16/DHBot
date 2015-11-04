@@ -8,14 +8,16 @@ import logging
 import discord
 
 from chatbot import Chatbot
+from reminder import Reminder
 
 
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
 
-# Create a new instance of a chatbot object
+# Create new instances of bot objects
 bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt')
+remind_module = Reminder()
 
 # Initialize client object, begin connection
 client = discord.Client()
@@ -108,8 +110,8 @@ def on_message(message):
 		if message.content.startswith('!purge'):
 			bot.purge(client, message)
 
-#		if message.content.startswith('!remindme'):
-#			bot.reminder(client, message)
+		if message.content.startswith('!remindme'):
+			remind_module.run(client, message)
 
 		if message.content.startswith('!timetoraid'):
 			pass
