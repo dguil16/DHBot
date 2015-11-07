@@ -4,18 +4,23 @@ import os
 import sys
 from os.path import getmtime
 import logging
+import trivia
 
 import discord
 
 from chatbot import Chatbot
+from reminder import Reminder
+from trivia import Trivia
 
 
 
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
 
-# Create a new instance of a chatbot object
+# Create new instances of bot objects
 bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt')
+remind_module = Reminder()
+trivia_module = Trivia()
 
 # Initialize client object, begin connection
 client = discord.Client()
@@ -41,7 +46,12 @@ def on_member_join(newmember):
 
 @client.event
 def on_message(message):
-	if bot.check_role(message, 'BotBan') == False:
+	if message.content.startswith('!help'):
+		bot.file_interface(client, message, 'help', 'read')
+	
+	elif isinstance(message.channel, discord.channel.PrivateChannel) == True:
+		pass
+	elif bot.check_role(message, 'BotBan') == False:
 		if message.content.startswith('!clear'):
 			bot.clear(client, message)
 
@@ -63,9 +73,6 @@ def on_message(message):
 		if message.content.startswith('!hello'):
 			bot.greet(client, message)
 
-		if message.content.startswith('!help'):
-			bot.file_interface(client, message, 'help', 'read')
-
 		if message.content.startswith('!edit-help'):
 			bot.file_interface(client, message, 'help', 'write')
 		
@@ -77,6 +84,12 @@ def on_message(message):
 
 		if message.content.startswith('!create-poll'):
 			bot.poll(client, message, 'create')
+
+		if message.content.startswith('!open-poll'):
+			bot.poll(client, message, 'open')
+
+		if message.content.startswith('!close-poll'):
+			bot.poll(client, message, 'close')
 
 		if message.content.startswith('!poll-info'):
 			bot.poll(client, message, 'info')
@@ -102,8 +115,8 @@ def on_message(message):
 		if message.content.startswith('!purge'):
 			bot.purge(client, message)
 
-#		if message.content.startswith('!remindme'):
-#			bot.reminder(client, message)
+		if message.content.startswith('!remindme'):
+			remind_module.run(client, message)
 
 		if message.content.startswith('!timetoraid'):
 			pass
@@ -128,6 +141,18 @@ def on_message(message):
 		
 		if message.content.startswith('!wiki'):
 			bot.wiki(client, message)
+
+		if message.content.startswith('!trivia'):
+			if message.channel.name == 'trivia':
+				if bot.check_role(message, 'Admin') == True or bot.check_role(message, 'Trivia Admin') == True:
+					trivia_module.trivia_fncs(client, message)
+				else:
+					client.send_message(message.channel, 'You do not have permission to do that.')
+
+		if message.content.lower() == str(trivia.trivia_answer).lower():
+			if message.channel.name == 'trivia':
+				trivia_module.correct_answer(client, message)
+
 
 # This will have to wait until the new gw2 api, which should contain this information.
 #		if message.content.startswith('!worldbosses'):

@@ -2,9 +2,6 @@ import datetime
 from datetime import datetime
 import json
 import requests
-import sched
-import threading
-import time
 
 import dice
 import discord
@@ -98,9 +95,8 @@ class Chatbot(object):
 		elif query == 'write':
 			if self.check_role(message, 'BotManager') == True:
 				text_file = open(location, 'w')
-				new_event_text = message.content.partition(' ')[2]
-				trim_event_text = new_event_text[0:1999]
-				text_file.write(trim_event_text)
+				new_text = message.content.partition(' ')[2]
+				text_file.write(new_text)
 				text_file.close()
 				client.delete_message(message)
 				client.send_message(message.channel, str(message.author) +' has updated the ' + str(file_name) + ' message.')
@@ -119,7 +115,7 @@ class Chatbot(object):
 			for x in list_to_delete:
 				client.delete_message(x)
 		else:
-			client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name +'.')
+			client.send_message(message.channel, 'I can\'t let you do that, ' + message.author.name +'.')
 
 	def fractal(self, client, message, query):
 		fractal_level = message.content.partition(' ')[2]
@@ -213,16 +209,6 @@ class Chatbot(object):
 		else:
 			client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name)
 
-#	def reminder(self, client, message):
-#		scheduler = sched.scheduler(time.time, time.sleep)
-#		rem = message.content.partition(' ')[2]
-#		rtime = rem.partition(',')[0]
-#		rmess = rem.partition(',')[2]
-#		rtime_form = datetime.strptime(rtime, '%b %d %Y %I:%M%p')
-#		delay = rtime_form - datetime.now()
-#		task1 = scheduler.enter(delay.total_seconds(), 1, client.send_message(message.author, rmess))
-
-
 	def roll_dice(self, client, message):
 		droll = message.content.partition(' ')[2]
 		clean = droll.split('d')
@@ -279,17 +265,17 @@ class Chatbot(object):
 						vote_list = {}
 						for x in option_list:
 							vote_list[x] = 0
-						poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[]}
+						poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[], "Author": message.author.name, "Status": "Open"}
 						all_polls[poll_name] = poll_content
 						f = open('polls.txt', 'w')
 						f.write(str(json.dumps(all_polls)))
 						f.close()
 						client.send_message(message.channel, 'The poll \"' + poll_name +'\" has been created.')
 				else:
-					client.send_message(message.channel, 'You do not haver permission to create polls at this time.')
+					client.send_message(message.channel, 'You do not have permission to create polls at this time.')
 
 			if query == 'delete':
-				if self.check_role(message, 'Leadership') == True:
+				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
 					all_polls["Names"].remove(poll_name)
 					del all_polls[poll_name]
 					f = open('polls.txt', 'w')
@@ -297,10 +283,12 @@ class Chatbot(object):
 					f.close()
 					client.send_message(message.channel, 'The poll \"' + poll_name + '\" has been deleted.')
 				else:
-					client.send_message(message.channel, 'You do not haver permission to delete this poll.')
+					client.send_message(message.channel, 'You do not have permission to delete this poll.')
 
 			if query == 'vote':
-				if message.author.name in all_polls[poll_name]["Voters"]:
+				if all_polls[poll_name]["Status"] == "Closed":
+					client.send_message(message.channel, "That poll is current closed.")
+				elif message.author.name in all_polls[poll_name]["Voters"]:
 					client.send_message(message.channel, 'You have already voted in this poll.')
 				else:
 					all_polls[poll_name]["Voters"].append(message.author.name)
@@ -312,7 +300,7 @@ class Chatbot(object):
 					client.send_message(message.channel, message.author.name + '\'s vote for ' + vote + ' has been recorded.')
 
 			if query == 'admin':
-				if self.check_role(message, 'Admin') == True:
+				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
 					vote = poll_query.split('; ')[1]
 					adjustment = int(poll_query.split('; ')[2])
 					all_polls[poll_name]["Votes"][vote] += adjustment
@@ -327,9 +315,35 @@ class Chatbot(object):
 				client.send_message(message.channel, 'The current polls are: ' +str(all_polls["Names"]))
 
 			if query == 'info':
-				client.send_message(message.channel, 'The description of  ' + poll_name + ' is:\n\n' + all_polls[poll_name]["Description"] + '\n\nThe options for this poll are: \n\n' + all_polls[poll_name]["Options"])
+				client.send_message(message.channel, poll_name + '\n\n' + all_polls[poll_name]["Description"] + '\n\nThe options for this poll are: ' + all_polls[poll_name]["Options"] +'\n\nStatus: ' + all_polls[poll_name]["Status"] + '\n\nAuthor: ' + all_polls[poll_name]["Author"])
 
 			if query == 'results':
 				client.send_message(message.channel, 'The current vote totals are as follows:\n\n' + str(all_polls[poll_name]["Votes"]))
+
+			if query == 'open':
+				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
+					if all_polls[poll_name]['Status'] == 'Open':
+						client.send_message(message.channel, 'That poll is already open.')
+					else:
+						all_polls[poll_name]["Status"] = "Open"
+						f = open('polls.txt', 'w')
+						f.write(str(json.dumps(all_polls)))
+						f.close()
+						client.send_message(message.channel, message.author.name + ' has opened the poll ' + poll_name + '.')
+				else:
+					client.send_message(message.channel, 'You do not have permission to modify this poll.')
+
+			if query == 'close':
+				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
+					if all_polls[poll_name]['Status'] == 'Closed':
+						client.send_message(message.channel, 'That poll is already closed.')
+					else:
+						all_polls[poll_name]["Status"] = "Closed"
+						f = open('polls.txt', 'w')
+						f.write(str(json.dumps(all_polls)))
+						f.close()
+						client.send_message(message.channel, message.author.name + ' has closed the poll ' + poll_name + '.')
+				else:
+					client.send_message(message.channel, 'You do not have permission to modify this poll.')
 		except:
 			client.send_message(message.channel, 'There was an error in your request. Please try again.')
