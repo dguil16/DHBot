@@ -143,11 +143,10 @@ def on_message(message):
 			bot.wiki(client, message)
 
 		if message.content.startswith('!trivia'):
-			if message.channel.name == 'trivia':
-				if bot.check_role(message, 'Admin') == True or bot.check_role(message, 'Trivia Admin') == True:
-					trivia_module.trivia_fncs(client, message)
-				else:
-					client.send_message(message.channel, 'You do not have permission to do that.')
+			if bot.check_role(message, 'Admin') == True or bot.check_role(message, 'Trivia Admin') == True:
+				trivia_module.trivia_fncs(client, message)
+			else:
+				client.send_message(message.channel, 'You do not have permission to do that.')
 
 		if message.content.lower() == str(trivia.trivia_answer).lower():
 			if message.channel.name == 'trivia':
