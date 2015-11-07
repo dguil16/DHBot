@@ -4,11 +4,13 @@ import os
 import sys
 from os.path import getmtime
 import logging
+import trivia
 
 import discord
 
 from chatbot import Chatbot
 from reminder import Reminder
+from trivia import Trivia
 
 
 
@@ -18,6 +20,7 @@ logging.basicConfig()
 # Create new instances of bot objects
 bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt')
 remind_module = Reminder()
+trivia_module = Trivia()
 
 # Initialize client object, begin connection
 client = discord.Client()
@@ -138,6 +141,18 @@ def on_message(message):
 		
 		if message.content.startswith('!wiki'):
 			bot.wiki(client, message)
+
+		if message.content.startswith('!trivia'):
+			if message.channel.name == 'trivia':
+				if bot.check_role(message, 'Admin') == True or bot.check_role(message, 'Trivia Admin') == True:
+					trivia_module.trivia_fncs(client, message)
+				else:
+					client.send_message(message.channel, 'You do not have permission to do that.')
+
+		if message.content.lower() == str(trivia.trivia_answer).lower():
+			if message.channel.name == 'trivia':
+				trivia_module.correct_answer(client, message)
+
 
 # This will have to wait until the new gw2 api, which should contain this information.
 #		if message.content.startswith('!worldbosses'):

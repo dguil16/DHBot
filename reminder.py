@@ -20,5 +20,7 @@ class Reminder(object):
 
 		seconds = hours*60*60 + minutes*60
 
+		client.send_message(message.channel, 'Reminder set.')
+
 		t = threading.Timer(seconds, self.respond, [client, message, text])
 		t.start()
