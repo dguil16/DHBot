@@ -103,6 +103,82 @@ class Chatbot(object):
 			else:
 				client.send_message(message.channel, 'You do not have permission to edit the ' + str(file_name) + ' message.')
 
+	def help(self, client, message, query):
+		f = open(self.help_text_file, 'r')
+		help_file = json.load(f)
+		f.close()
+
+		if query == 'read':
+			help_list = ''
+			for x in sorted(help_file["Commands"]):
+				help_list += x + '\n'
+			client.send_message(message.channel, 'The following is a list of commands that I understand. For more information about a specific command, please type \"!help <command>\".\n\n' + help_list)
+
+		if query == 'admin':
+			help_list = ''
+			for x in sorted(help_file["Admin Commands"]):
+				help_list += x + '\n'
+			client.send_message(message.channel, 'The following is a list of commands that are usable by Admins. For more information about a specific command, please type \"!help <command>\".\n\n' + help_list)
+
+		if query == 'info':
+			help_query = message.content.partition(' ')[2]
+			client.send_message(message.channel, help_file[help_query])
+
+		if check_role(message, 'Admin'):
+			if query == 'edit':
+				help_msg = message.content.partition(' ')[2].split('; ')
+				help_name = help_msg[0]
+				help_text = help_msg[1]
+				if help_name in help_file["Commands"] or help_name in help_file["Admin Commands"]:
+					help_file[help_name] = help_text
+					client.send_message(message.channel, 'The information for ' +help_name + ' has been edited.')
+				else:
+					client.send_message(message.channel, 'There is no help entry for ' + help_name +'. Please use !add-help or !add-adminhelp to create it.')
+
+			if query == 'add':
+				help_msg = message.content.partition(' ')[2].split('; ')
+				help_name = help_msg[0]
+				help_text = help_msg[1]
+				if help_name not in help_file["Commands"]:
+					help_file["Commands"].append(help_name)
+					help_file[help_name] = help_text
+					client.send_message(message.channel, 'The help entry for ' +help_name + ' has been created.')
+				else:
+					client.send_message(message.channel, 'That help entry already exists. Please use !edit-help instead.')
+
+			if query == 'add-admin':
+				help_msg = message.content.partition(' ')[2].split('; ')
+				help_name = help_msg[0]
+				help_text = help_msg[1]
+				if help_name not in help_file["Admin Commands"]:
+					help_file["Admin Commands"].append(help_name)
+					help_file[help_name] = help_text
+					client.send_message(message.channel, 'The help entry for ' +help_name + ' has been created.')
+				else:
+					client.send_message(message.channel, 'That help entry already exists. Please use !edit-help instead.')
+
+			if query == 'delete':
+				help_name = message.content.partition(' ')[2]
+				if help_name in help_file["Commands"]:
+					help_file["Commands"].remove(help_name)
+					del help_file[help_name]
+					client.send_message(message.channel, 'The help entry for ' +help_name + ' has been deleted.')
+				else:
+					client.send_message(message.channel, 'There is no help entry by that name.')
+
+			if query == 'delete-admin':
+				help_name = message.content.partition(' ')[2]
+				if help_name in help_file["Admin Commands"]:
+					help_file["Admin Commands"].remove(help_name)
+					del help_file[help_name]
+					client.send_message(message.channel, 'The help entry for ' +help_name + ' has been deleted.')
+				else:
+					client.send_message(message.channel, 'There is no help entry by that name.')
+
+		f = open(self.help_text_file, 'w')
+		f.write(str(json.dumps(help_file)))
+		f.close()
+
 	def clear(self, client, message):
 		if self.check_role(message, 'Admin') == True:
 			split_message = message.content.split(' ', 2)
@@ -245,105 +321,3 @@ class Chatbot(object):
 		search = message.content.partition(' ')[2].replace(' ', '_')
 		client.send_message(message.channel, 'http://wiki.guildwars2.com/wiki/Special:Search/'+search)
 
-	def poll(self, client, message, query):
-		try:
-			poll_query = message.content.partition(' ')[2]
-			poll_name = poll_query.split('; ')[0]
-			f = open('polls.txt', 'r')
-			all_polls = json.load(f)
-			f.close()
-			
-			if query == 'create':
-				if self.check_role(message, 'Leadership') == True:
-					poll_desc = poll_query.split('; ')[1]
-					poll_opt = poll_query.split('; ')[2]
-					option_list = poll_opt.split(', ')
-					if poll_name in all_polls["Names"]:
-						client.send_message(message.channel, 'There is already a poll with that name.')
-					else:
-						all_polls["Names"].append(poll_name)
-						vote_list = {}
-						for x in option_list:
-							vote_list[x] = 0
-						poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[], "Author": message.author.name, "Status": "Open"}
-						all_polls[poll_name] = poll_content
-						f = open('polls.txt', 'w')
-						f.write(str(json.dumps(all_polls)))
-						f.close()
-						client.send_message(message.channel, 'The poll \"' + poll_name +'\" has been created.')
-				else:
-					client.send_message(message.channel, 'You do not have permission to create polls at this time.')
-
-			if query == 'delete':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
-					all_polls["Names"].remove(poll_name)
-					del all_polls[poll_name]
-					f = open('polls.txt', 'w')
-					f.write(str(json.dumps(all_polls)))
-					f.close()
-					client.send_message(message.channel, 'The poll \"' + poll_name + '\" has been deleted.')
-				else:
-					client.send_message(message.channel, 'You do not have permission to delete this poll.')
-
-			if query == 'vote':
-				if all_polls[poll_name]["Status"] == "Closed":
-					client.send_message(message.channel, "That poll is current closed.")
-				elif message.author.name in all_polls[poll_name]["Voters"]:
-					client.send_message(message.channel, 'You have already voted in this poll.')
-				else:
-					all_polls[poll_name]["Voters"].append(message.author.name)
-					vote = poll_query.split('; ')[1]
-					all_polls[poll_name]["Votes"][vote] += 1
-					f = open('polls.txt', 'w')
-					f.write(str(json.dumps(all_polls)))
-					f.close()
-					client.send_message(message.channel, message.author.name + '\'s vote for ' + vote + ' has been recorded.')
-
-			if query == 'admin':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
-					vote = poll_query.split('; ')[1]
-					adjustment = int(poll_query.split('; ')[2])
-					all_polls[poll_name]["Votes"][vote] += adjustment
-					f = open('polls.txt', 'w')
-					f.write(str(json.dumps(all_polls)))
-					f.close()
-					client.send_message(message.channel, message.author.name + ' has adjusted the vote for ' + vote + ' by ' + str(adjustment) + '.')
-				else:
-					client.send_message(message.channel, 'You do not have permission to use that function.')
-
-			if query == 'list':
-				client.send_message(message.channel, 'The current polls are: ' +str(all_polls["Names"]))
-
-			if query == 'info':
-				client.send_message(message.channel, poll_name + '\n\n' + all_polls[poll_name]["Description"] + '\n\nThe options for this poll are: ' + all_polls[poll_name]["Options"] +'\n\nStatus: ' + all_polls[poll_name]["Status"] + '\n\nAuthor: ' + all_polls[poll_name]["Author"])
-
-			if query == 'results':
-				client.send_message(message.channel, 'The current vote totals are as follows:\n\n' + str(all_polls[poll_name]["Votes"]))
-
-			if query == 'open':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
-					if all_polls[poll_name]['Status'] == 'Open':
-						client.send_message(message.channel, 'That poll is already open.')
-					else:
-						all_polls[poll_name]["Status"] = "Open"
-						f = open('polls.txt', 'w')
-						f.write(str(json.dumps(all_polls)))
-						f.close()
-						client.send_message(message.channel, message.author.name + ' has opened the poll ' + poll_name + '.')
-				else:
-					client.send_message(message.channel, 'You do not have permission to modify this poll.')
-
-			if query == 'close':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
-					if all_polls[poll_name]['Status'] == 'Closed':
-						client.send_message(message.channel, 'That poll is already closed.')
-					else:
-						all_polls[poll_name]["Status"] = "Closed"
-						f = open('polls.txt', 'w')
-						f.write(str(json.dumps(all_polls)))
-						f.close()
-						client.send_message(message.channel, message.author.name + ' has closed the poll ' + poll_name + '.')
-				else:
-					client.send_message(message.channel, 'You do not have permission to modify this poll.')
-		except:
-			client.send_message(message.channel, 'There was an error in your request. Please try again.')

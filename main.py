@@ -9,6 +9,7 @@ import trivia
 import discord
 
 from chatbot import Chatbot
+from polls import Poll
 from reminder import Reminder
 from trivia import Trivia
 
@@ -21,6 +22,7 @@ logging.basicConfig()
 bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt')
 remind_module = Reminder()
 trivia_module = Trivia()
+poll_module = Poll()
 
 # Initialize client object, begin connection
 client = discord.Client()
@@ -46,8 +48,14 @@ def on_member_join(newmember):
 
 @client.event
 def on_message(message):
-	if message.content.startswith('!help'):
-		bot.file_interface(client, message, 'help', 'read')
+	if message.content == '!help':
+		bot.help(client, message, 'read')
+
+	if message.content == '!help-admin':
+		bot.help(client, message, 'admin')
+
+	if message.content.startswith('!help '):
+		bot.help(client, message, 'info')
 	
 	elif isinstance(message.channel, discord.channel.PrivateChannel) == True:
 		pass
@@ -74,7 +82,19 @@ def on_message(message):
 			bot.greet(client, message)
 
 		if message.content.startswith('!edit-help'):
-			bot.file_interface(client, message, 'help', 'write')
+			bot.help(client, message, 'edit')
+
+		if message.content.startswith('!add-help'):
+			bot.help(client, message, 'add')
+
+		if message.content.startswith('!add-adminhelp'):
+			bot.help(client, message, 'add-admin')
+
+		if message.content.startswith('!delete-help'):
+			bot.help(client, message, 'delete')
+
+		if message.content.startswith('!delete-adminhelp'):
+			bot.help(client, message, 'delete-admin')
 		
 		if message.content.startswith('!lmgtfy'):
 			bot.lmgtfy(client, message)
@@ -82,32 +102,56 @@ def on_message(message):
 		if message.content.startswith('!mission'):
 			bot.mission(client, message)
 
-		if message.content.startswith('!create-poll'):
-			bot.poll(client, message, 'create')
+		if message.content.startswith('!poll-create'):
+			poll_module.poll_fnc(client, message, 'create')
 
-		if message.content.startswith('!open-poll'):
-			bot.poll(client, message, 'open')
+		if message.content.startswith('!poll-open'):
+			poll_module.poll_fnc(client, message, 'open')
 
-		if message.content.startswith('!close-poll'):
-			bot.poll(client, message, 'close')
+		if message.content.startswith('!poll-close'):
+			poll_module.poll_fnc(client, message, 'close')
 
 		if message.content.startswith('!poll-info'):
-			bot.poll(client, message, 'info')
+			poll_module.poll_fnc(client, message, 'info')
 
-		if message.content.startswith('!delete-poll'):
-			bot.poll(client, message, 'delete')
+		if message.content.startswith('!poll-delete'):
+			poll_module.poll_fnc(client, message, 'delete')
 
 		if message.content.startswith('!vote'):
-			bot.poll(client, message, 'vote')
+			poll_module.poll_fnc(client, message, 'vote')
 
 		if message.content.startswith('!admin-vote'):
-			bot.poll(client, message, 'admin')
+			poll_module.poll_fnc(client, message, 'admin')
 
-		if message.content.startswith('!list-polls'):
-			bot.poll(client, message, 'list')
+		if message.content.startswith('!poll-list'):
+			poll_module.poll_fnc(client, message, 'list')
 
 		if message.content.startswith('!poll-results'):
-			bot.poll(client, message, 'results')
+			poll_module.poll_fnc(client, message, 'results')
+
+		if message.content.startswith('!survey-create'):
+			poll_module.survey_fnc(client, message, 'create')
+
+		if message.content.startswith('!survey-open'):
+			poll_module.survey_fnc(client, message, 'open')
+
+		if message.content.startswith('!survey-close'):
+			poll_module.survey_fnc(client, message, 'close')
+
+		if message.content.startswith('!survey-info'):
+			poll_module.survey_fnc(client, message, 'info')
+
+		if message.content.startswith('!survey-delete'):
+			poll_module.survey_fnc(client, message, 'delete')
+
+		if message.content.startswith('!survey-submit'):
+			poll_module.survey_fnc(client, message, 'submit')
+
+		if message.content.startswith('!survey-list'):
+			poll_module.survey_fnc(client, message, 'list')
+
+		if message.content.startswith('!survey-results'):
+			poll_module.survey_fnc(client, message, 'results')
 
 		if message.content.startswith('!price'):
 			bot.price(client, message)
