@@ -51,7 +51,7 @@ def on_message(message):
 	if message.content == '!help':
 		bot.help(client, message, 'read')
 
-	if message.content == '!help-admin':
+	if message.content == '!adminhelp':
 		bot.help(client, message, 'admin')
 
 	if message.content.startswith('!help '):
@@ -63,37 +63,37 @@ def on_message(message):
 		if message.content.startswith('!clear'):
 			bot.clear(client, message)
 
-		if message.content.startswith('!events'):
+		if message.content == '!events':
 			bot.file_interface(client, message, 'events', 'read')
 
-		if message.content.startswith('!edit-events'):
+		if message.content.startswith('!events-edit'):
 			bot.file_interface(client, message, 'events', 'write')
 
-		if message.content.startswith('!fractal'):
+		if message.content == '!fractal':
 			bot.fractal(client, message, 'send')
 
-		if message.content.startswith('!add-fractal'):
+		if message.content.startswith('!fractal-add'):
 			bot.fractal(client, message, 'add')
 
-		if message.content.startswith('!remove-fractal'):
+		if message.content.startswith('!fractal-remove'):
 			bot.fractal(client, message, 'remove')
 
 		if message.content.startswith('!hello'):
 			bot.greet(client, message)
 
-		if message.content.startswith('!edit-help'):
+		if message.content.startswith('!help-edit'):
 			bot.help(client, message, 'edit')
 
-		if message.content.startswith('!add-help'):
+		if message.content.startswith('!help-add'):
 			bot.help(client, message, 'add')
 
-		if message.content.startswith('!add-adminhelp'):
+		if message.content.startswith('!adminhelp-add'):
 			bot.help(client, message, 'add-admin')
 
-		if message.content.startswith('!delete-help'):
+		if message.content.startswith('!help-delete'):
 			bot.help(client, message, 'delete')
 
-		if message.content.startswith('!delete-adminhelp'):
+		if message.content.startswith('!adminhelp-delete'):
 			bot.help(client, message, 'delete-admin')
 		
 		if message.content.startswith('!lmgtfy'):

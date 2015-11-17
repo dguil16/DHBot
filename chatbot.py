@@ -124,7 +124,7 @@ class Chatbot(object):
 			help_query = message.content.partition(' ')[2]
 			client.send_message(message.channel, help_file[help_query])
 
-		if check_role(message, 'Admin'):
+		if self.check_role(message, 'Admin'):
 			if query == 'edit':
 				help_msg = message.content.partition(' ')[2].split('; ')
 				help_name = help_msg[0]
