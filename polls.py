@@ -69,7 +69,7 @@ class Poll(object):
 					client.send_message(message.channel, 'You have already voted in this poll.')
 				else:
 					all_polls[poll_name]["Voters"].append(message.author.name)
-					vote = poll_query.split('; ')[1]
+					vote = poll_query.partition('; ')[2]
 					all_polls[poll_name]["Votes"][vote] += 1
 					f = open('polls.txt', 'w')
 					f.write(str(json.dumps(all_polls)))
@@ -136,7 +136,7 @@ class Poll(object):
 			
 			if query == 'create':
 				if self.check_role(message, 'Leadership') == True:
-					survey_desc = survey_query.split('; ')[1]
+					survey_desc = survey_query.partition('; ')[2]
 					if survey_name in all_surveys["Names"]:
 						client.send_message(message.channel, 'There is already a survey with that name.')
 					else:
@@ -168,7 +168,20 @@ class Poll(object):
 					client.send_message(message.channel, 'You have already submitted an answer to this survey.')
 				else:
 					all_surveys[survey_name]["Voters"].append(message.author.name)
-					vote = survey_query.split('; ')[1]
+					vote = survey_query.partition('; ')[2]
+					all_surveys[survey_name]["Entries"][message.author.name] = vote
+					f = open('surveys.txt', 'w')
+					f.write(str(json.dumps(all_surveys)))
+					f.close()
+					client.send_message(message.channel, 'Your survey submission has been recorded.')
+
+			if query == 'change':
+				if all_surveys[survey_name]["Status"] == "Closed":
+					client.send_message(message.channel, "That survey is currently closed.")
+				elif message.author.name not in all_surveys[survey_name]["Voters"]:
+					client.send_message(message.channel, 'You have not yet submitted an answer to this survey. Please use !survey-submit instead.')
+				else:
+					vote = survey_query.partition('; ')[2]
 					all_surveys[survey_name]["Entries"][message.author.name] = vote
 					f = open('surveys.txt', 'w')
 					f.write(str(json.dumps(all_surveys)))

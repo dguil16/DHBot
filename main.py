@@ -147,6 +147,9 @@ def on_message(message):
 		if message.content.startswith('!survey-submit'):
 			poll_module.survey_fnc(client, message, 'submit')
 
+		if message.content.startswith('!survey-change'):
+			poll_module.survey_fnc(client, message, 'change')
+
 		if message.content.startswith('!survey-list'):
 			poll_module.survey_fnc(client, message, 'list')
 
