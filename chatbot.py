@@ -126,9 +126,9 @@ class Chatbot(object):
 
 		if self.check_role(message, 'Admin'):
 			if query == 'edit':
-				help_msg = message.content.partition(' ')[2].split('; ')
+				help_msg = message.content.partition(' ')[2].partition('; ')
 				help_name = help_msg[0]
-				help_text = help_msg[1]
+				help_text = help_msg[2]
 				if help_name in help_file["Commands"] or help_name in help_file["Admin Commands"]:
 					help_file[help_name] = help_text
 					client.send_message(message.channel, 'The information for ' +help_name + ' has been edited.')
@@ -136,9 +136,9 @@ class Chatbot(object):
 					client.send_message(message.channel, 'There is no help entry for ' + help_name +'. Please use !add-help or !add-adminhelp to create it.')
 
 			if query == 'add':
-				help_msg = message.content.partition(' ')[2].split('; ')
+				help_msg = message.content.partition(' ')[2].partition('; ')
 				help_name = help_msg[0]
-				help_text = help_msg[1]
+				help_text = help_msg[2]
 				if help_name not in help_file["Commands"]:
 					help_file["Commands"].append(help_name)
 					help_file[help_name] = help_text
@@ -147,9 +147,9 @@ class Chatbot(object):
 					client.send_message(message.channel, 'That help entry already exists. Please use !edit-help instead.')
 
 			if query == 'add-admin':
-				help_msg = message.content.partition(' ')[2].split('; ')
+				help_msg = message.content.partition(' ')[2].partition('; ')
 				help_name = help_msg[0]
-				help_text = help_msg[1]
+				help_text = help_msg[2]
 				if help_name not in help_file["Admin Commands"]:
 					help_file["Admin Commands"].append(help_name)
 					help_file[help_name] = help_text
