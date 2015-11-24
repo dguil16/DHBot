@@ -123,8 +123,11 @@ def on_message(message):
 		if message.content.startswith('!poll-delete'):
 			poll_module.poll_fnc(client, message, 'delete')
 
-		if message.content.startswith('!vote'):
+		if message.content.startswith('!vote '):
 			poll_module.poll_fnc(client, message, 'vote')
+
+		if message.content.startswith('!vote-remove'):
+			poll_module.poll_fnc(client, message, 'vote remove')
 
 		if message.content.startswith('!vote-change'):
 			poll_module.poll_fnc(client, message, 'change')
