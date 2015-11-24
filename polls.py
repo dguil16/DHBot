@@ -23,13 +23,55 @@ class Poll(object):
 			return False
 
 	def poll_fnc(self, client, message, query):
-		try:
+		#try:
 			poll_query = message.content.partition(' ')[2]
 			poll_name = poll_query.split('; ')[0]
 			f = open('polls.txt', 'r')
 			all_polls = json.load(f)
 			f.close()
 			
+			if query == 'create anon':
+				if self.check_role(message, 'Leadership') == True:
+					poll_desc = poll_query.split('; ')[1]
+					poll_opt = poll_query.split('; ')[2]
+					option_list = poll_opt.split(', ')
+					if poll_name in all_polls["Names"]:
+						client.send_message(message.channel, 'There is already a poll with that name.')
+					else:
+						all_polls["Names"].append(poll_name)
+						vote_list = {}
+						for x in option_list:
+							vote_list[x] = 0
+						poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[], "Author": message.author.name, "Status": "Open", "Anon": "Yes", "Type": "Single"}
+						all_polls[poll_name] = poll_content
+						f = open('polls.txt', 'w')
+						f.write(str(json.dumps(all_polls)))
+						f.close()
+						client.send_message(message.channel, 'The poll \"' + poll_name +'\" has been created.')
+				else:
+					client.send_message(message.channel, 'You do not have permission to create polls at this time.')
+
+			if query == 'create multi':
+				if self.check_role(message, 'Leadership') == True:
+					poll_desc = poll_query.split('; ')[1]
+					poll_opt = poll_query.split('; ')[2]
+					option_list = poll_opt.split(', ')
+					if poll_name in all_polls["Names"]:
+						client.send_message(message.channel, 'There is already a poll with that name.')
+					else:
+						all_polls["Names"].append(poll_name)
+						vote_list = {}
+						for x in option_list:
+							vote_list[x] = 0
+						poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":{}, "Author": message.author.name, "Status": "Open", "Anon": "No", "Type": "Multi"}
+						all_polls[poll_name] = poll_content
+						f = open('polls.txt', 'w')
+						f.write(str(json.dumps(all_polls)))
+						f.close()
+						client.send_message(message.channel, 'The poll \"' + poll_name +'\" has been created.')
+				else:
+					client.send_message(message.channel, 'You do not have permission to create polls at this time.')
+
 			if query == 'create':
 				if self.check_role(message, 'Leadership') == True:
 					poll_desc = poll_query.split('; ')[1]
@@ -42,7 +84,7 @@ class Poll(object):
 						vote_list = {}
 						for x in option_list:
 							vote_list[x] = 0
-						poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":[], "Author": message.author.name, "Status": "Open"}
+						poll_content = {"Description": poll_desc, "Options": poll_opt, "Votes":vote_list, "Voters":{}, "Author": message.author.name, "Status": "Open", "Anon": "No", "Type": "Single"}
 						all_polls[poll_name] = poll_content
 						f = open('polls.txt', 'w')
 						f.write(str(json.dumps(all_polls)))
@@ -65,9 +107,9 @@ class Poll(object):
 			if query == 'vote':
 				if all_polls[poll_name]["Status"] == "Closed":
 					client.send_message(message.channel, "That poll is currently closed.")
-				elif message.author.name in all_polls[poll_name]["Voters"]:
+				elif message.author.name in all_polls[poll_name]["Voters"] and all_polls[poll_name]["Type"] == "Single":
 					client.send_message(message.channel, 'You have already voted in this poll.')
-				else:
+				elif all_polls[poll_name]["Anon"] == "Yes":
 					all_polls[poll_name]["Voters"].append(message.author.name)
 					vote = poll_query.partition('; ')[2]
 					all_polls[poll_name]["Votes"][vote] += 1
@@ -75,6 +117,25 @@ class Poll(object):
 					f.write(str(json.dumps(all_polls)))
 					f.close()
 					client.send_message(message.channel, message.author.name + '\'s vote for ' + vote + ' has been recorded.')
+				elif all_polls[poll_name]["Anon"] == "No" and all_polls[poll_name]["Type"] == "Single":
+					vote = poll_query.partition('; ')[2]
+					all_polls[poll_name]["Voters"][message.author.name] = vote
+					all_polls[poll_name]["Votes"][vote] += 1
+					f = open('polls.txt', 'w')
+					f.write(str(json.dumps(all_polls)))
+					f.close()
+					client.send_message(message.channel, message.author.name + '\'s vote for ' + vote + ' has been recorded.')
+				elif all_polls[poll_name]["Type"] == "Multi":
+					vote = poll_query.partition('; ')[2]
+					if vote in all_polls[poll_name]["Voters"][message.author.name]:
+						client.send_message(message.channel, 'You have already voted for that option.')
+					else:
+						all_polls[poll_name]["Voters"][message.author.name] += [vote]
+						all_polls[poll_name]["Votes"][vote] += 1
+						f = open('polls.txt', 'w')
+						f.write(str(json.dumps(all_polls)))
+						f.close()
+						client.send_message(message.channel, message.author.name + '\'s vote for ' + vote + ' has been recorded.')
 
 			if query == 'admin':
 				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
@@ -123,8 +184,8 @@ class Poll(object):
 				else:
 					client.send_message(message.channel, 'You do not have permission to modify this poll.')
 
-		except:
-			client.send_message(message.channel, 'There was an error in your request. Please try again.')
+		#except:
+		#	client.send_message(message.channel, 'There was an error in your request. Please try again.')
 
 	def survey_fnc(self, client, message, query):
 		try:

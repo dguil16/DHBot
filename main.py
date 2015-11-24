@@ -69,7 +69,7 @@ def on_message(message):
 		if message.content.startswith('!events-edit'):
 			bot.file_interface(client, message, 'events', 'write')
 
-		if message.content == '!fractal':
+		if message.content.startswith('!fractal '):
 			bot.fractal(client, message, 'send')
 
 		if message.content.startswith('!fractal-add'):
@@ -105,6 +105,12 @@ def on_message(message):
 		if message.content.startswith('!poll-create'):
 			poll_module.poll_fnc(client, message, 'create')
 
+		if message.content.startswith('!anonpoll-create'):
+			poll_module.poll_fnc(client, message, 'create anon')
+
+		if message.content.startswith('!multipoll-create'):
+			poll_module.poll_fnc(client, message, 'create multi')
+
 		if message.content.startswith('!poll-open'):
 			poll_module.poll_fnc(client, message, 'open')
 
@@ -119,6 +125,9 @@ def on_message(message):
 
 		if message.content.startswith('!vote'):
 			poll_module.poll_fnc(client, message, 'vote')
+
+		if message.content.startswith('!vote-change'):
+			poll_module.poll_fnc(client, message, 'change')
 
 		if message.content.startswith('!admin-vote'):
 			poll_module.poll_fnc(client, message, 'admin')
