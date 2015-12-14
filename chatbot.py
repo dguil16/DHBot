@@ -9,12 +9,13 @@ import discord
 class Chatbot(object):
 	"""docstring for chatbot"""
 
-	def __init__(self, credential_location, event_text_file, help_text_file, fractal_text_file, mission_text_file):
+	def __init__(self, credential_location, event_text_file, help_text_file, fractal_text_file, mission_text_file, server_name):
 		self.credential_location = credential_location
 		self.event_text_file = event_text_file
 		self.help_text_file = help_text_file
 		self.fractal_text_file = fractal_text_file
 		self.mission_text_file = mission_text_file
+		self.server_name = server_name
 
 	def _weekly_event(self, event_day, event_hour, event_minute):
 		"""
@@ -65,13 +66,14 @@ class Chatbot(object):
 			event_time = event_time + datetime.timedelta(days=1)
 			return (event_time - now)
 
-	def check_role(self, message_or_member, role_test):
+	def check_role(self, client, message_or_member, role_test):
 		if isinstance(message_or_member, discord.message.Message) == True:
 			msg = message_or_member
-			mem = discord.utils.find(lambda m: m.id == msg.author.id, msg.channel.server.members)
+			serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+			mem = discord.utils.find(lambda m: m.id == msg.author.id, serv.members)
 		elif isinstance(message_or_member, (discord.user.User)) == True:
 			member = message_or_member
-			mem = discord.utils.find(lambda m: m.id == member.id, member.server.members)
+			mem = discord.utils.find(lambda m: m.id == member.id, serv.members)
 
 		user_roles = []
 		for x in mem.roles:
@@ -93,7 +95,7 @@ class Chatbot(object):
 			client.send_message(message.channel, text_file.read())
 			text_file.close()
 		elif query == 'write':
-			if self.check_role(message, 'BotManager') == True:
+			if self.check_role(client, message, 'BotManager') == True:
 				text_file = open(location, 'w')
 				new_text = message.content.partition(' ')[2]
 				text_file.write(new_text)
@@ -124,7 +126,7 @@ class Chatbot(object):
 			help_query = message.content.partition(' ')[2]
 			client.send_message(message.channel, help_file[help_query])
 
-		if self.check_role(message, 'Admin'):
+		if self.check_role(client, message, 'Admin'):
 			if query == 'edit':
 				help_msg = message.content.partition(' ')[2].partition('; ')
 				help_name = help_msg[0]
@@ -180,7 +182,7 @@ class Chatbot(object):
 		f.close()
 
 	def clear(self, client, message):
-		if self.check_role(message, 'Admin') == True:
+		if self.check_role(client, message, 'Admin') == True:
 			split_message = message.content.split(' ', 2)
 			chan_name = split_message[1]
 			chan = discord.utils.find(lambda m: m.name == chan_name, message.channel.server.channels)
@@ -271,7 +273,7 @@ class Chatbot(object):
 			client.send_message(message.channel, 'There was an error processing your request.')
 
 	def purge(self, client, message):
-		if self.check_role(message, 'Admin') == True:
+		if self.check_role(client, message, 'Admin') == True:
 			split_message = message.content.split(' ', 2)
 			user_name = split_message[1]
 			user = discord.utils.find(lambda m: m.name == user_name, message.channel.server.members)
@@ -294,7 +296,7 @@ class Chatbot(object):
 			client.send_message(message.channel, 'Not an appropriate amount or size of dice.')
 
 	def stop_bot(self, client, message):
-		if self.check_role(message, 'BotManager') == True:
+		if self.check_role(client, message, 'BotManager') == True:
 			client.logout()
 		else:
 			client.send_message(message.channel, 'You do not have permission to stop DHBot.')
