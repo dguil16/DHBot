@@ -19,7 +19,7 @@ from trivia import Trivia
 logging.basicConfig()
 
 # Create new instances of bot objects
-bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt')
+bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt', 'Descendants of Honor')
 remind_module = Reminder()
 trivia_module = Trivia()
 poll_module = Poll()
@@ -31,6 +31,8 @@ client.login(bot.get_bot_credential('Username'), bot.get_bot_credential('Passwor
 if not client.is_logged_in:
 	print('Logging in to Discord failed')
 	exit(1)
+
+server_list = []
 
 # Event handler
 @client.event
@@ -48,18 +50,17 @@ def on_member_join(newmember):
 
 @client.event
 def on_message(message):
-	if message.content == '!help':
-		bot.help(client, message, 'read')
+	if bot.check_role(client, message, 'BotBan') == False:
 
-	if message.content == '!adminhelp':
-		bot.help(client, message, 'admin')
+		if message.content == '!help':
+			bot.help(client, message, 'read')
 
-	if message.content.startswith('!help '):
-		bot.help(client, message, 'info')
+		if message.content == '!adminhelp':
+			bot.help(client, message, 'admin')
+
+		if message.content.startswith('!help '):
+			bot.help(client, message, 'info')
 	
-	elif isinstance(message.channel, discord.channel.PrivateChannel) == True:
-		pass
-	elif bot.check_role(message, 'BotBan') == False:
 		if message.content.startswith('!clear'):
 			bot.clear(client, message)
 
@@ -202,7 +203,7 @@ def on_message(message):
 			bot.wiki(client, message)
 
 		if message.content.startswith('!trivia'):
-			if bot.check_role(message, 'Admin') == True or bot.check_role(message, 'Trivia Admin') == True:
+			if bot.check_role(client, message, 'Admin') == True or bot.check_role(client, message, 'Trivia Admin') == True:
 				trivia_module.trivia_fncs(client, message)
 			else:
 				client.send_message(message.channel, 'You do not have permission to do that.')
@@ -226,6 +227,8 @@ def on_ready():
 	print(client.user.name)
 	print(client.user.id)
 	print('------')
+	global server_list
+	server_list = client.servers
 
 client.run()
 

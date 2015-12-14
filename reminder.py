@@ -11,7 +11,7 @@ class Reminder(object):
 		pass
 
 	def respond(self, client, message, text):
-		client.send_message(message.author, '@' + message.author.name + ' ' + text)
+		client.send_message(message.author, 'Reminder: ' + text)
 
 	def run(self, client, message):
 		hours = int(message.content.split(' ', 3)[1])
