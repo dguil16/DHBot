@@ -39,7 +39,7 @@ server_list = []
 def on_member_join(newmember):
 	admin_users = []
 	for x in newmember.server.members:
-		if bot.check_role(x, 'Admin') == True:
+		if bot.check_role(client, x, 'Admin') == True:
 			admin_users += [x]
 	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', newmember.server.channels)
 	admin_mentions = ''
