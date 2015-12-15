@@ -5,7 +5,7 @@ class Poll(object):
 	def __init__(self):
 		pass
 
-	def check_role(self, message_or_member, role_test):
+	def check_role(self, client, message_or_member, role_test):
 		if isinstance(message_or_member, discord.message.Message) == True:
 			msg = message_or_member
 			mem = discord.utils.find(lambda m: m.id == msg.author.id, msg.channel.server.members)
@@ -31,7 +31,7 @@ class Poll(object):
 			f.close()
 			
 			if query == 'create anon':
-				if self.check_role(message, 'Leadership') == True:
+				if self.check_role(client, message, 'Leadership') == True:
 					poll_desc = poll_query.split('; ')[1]
 					poll_opt = poll_query.split('; ')[2]
 					option_list = poll_opt.split(', ')
@@ -52,7 +52,7 @@ class Poll(object):
 					client.send_message(message.channel, 'You do not have permission to create polls at this time.')
 
 			if query == 'create multi':
-				if self.check_role(message, 'Leadership') == True:
+				if self.check_role(client, message, 'Leadership') == True:
 					poll_desc = poll_query.split('; ')[1]
 					poll_opt = poll_query.split('; ')[2]
 					option_list = poll_opt.split(', ')
@@ -73,7 +73,7 @@ class Poll(object):
 					client.send_message(message.channel, 'You do not have permission to create polls at this time.')
 
 			if query == 'create':
-				if self.check_role(message, 'Leadership') == True:
+				if self.check_role(client, message, 'Leadership') == True:
 					poll_desc = poll_query.split('; ')[1]
 					poll_opt = poll_query.split('; ')[2]
 					option_list = poll_opt.split(', ')
@@ -94,7 +94,7 @@ class Poll(object):
 					client.send_message(message.channel, 'You do not have permission to create polls at this time.')
 
 			if query == 'delete':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
+				if self.check_role(client, message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
 					all_polls["Names"].remove(poll_name)
 					del all_polls[poll_name]
 					f = open('polls.txt', 'w')
@@ -163,7 +163,7 @@ class Poll(object):
 
 
 			if query == 'admin':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
+				if self.check_role(client, message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
 					vote = poll_query.split('; ')[1]
 					adjustment = int(poll_query.split('; ')[2])
 					all_polls[poll_name]["Votes"][vote] += adjustment
@@ -184,7 +184,7 @@ class Poll(object):
 				client.send_message(message.channel, 'The current vote totals are as follows:\n\n' + str(all_polls[poll_name]["Totals"]))
 
 			if query == 'open':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
+				if self.check_role(client, message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
 					if all_polls[poll_name]['Status'] == 'Open':
 						client.send_message(message.channel, 'That poll is already open.')
 					else:
@@ -197,7 +197,7 @@ class Poll(object):
 					client.send_message(message.channel, 'You do not have permission to modify this poll.')
 
 			if query == 'close':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
+				if self.check_role(client, message, 'Admin') == True or message.author.name == all_polls[poll_name]["Author"]:
 					if all_polls[poll_name]['Status'] == 'Closed':
 						client.send_message(message.channel, 'That poll is already closed.')
 					else:
@@ -221,7 +221,7 @@ class Poll(object):
 			f.close()
 			
 			if query == 'create':
-				if self.check_role(message, 'Leadership') == True:
+				if self.check_role(client, message, 'Leadership') == True:
 					survey_desc = survey_query.partition('; ')[2]
 					if survey_name in all_surveys["Names"]:
 						client.send_message(message.channel, 'There is already a survey with that name.')
@@ -237,7 +237,7 @@ class Poll(object):
 					client.send_message(message.channel, 'You do not have permission to create surveys at this time.')
 
 			if query == 'delete':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_surveys[survey_name]["Author"]:
+				if self.check_role(client, message, 'Admin') == True or message.author.name == all_surveys[survey_name]["Author"]:
 					all_surveys["Names"].remove(survey_name)
 					del all_surveys[survey_name]
 					f = open('surveys.txt', 'w')
@@ -281,13 +281,13 @@ class Poll(object):
 				client.send_message(message.channel, survey_name + '\n\n' + all_surveys[survey_name]["Description"] + '\n\nStatus: ' + all_surveys[survey_name]["Status"] + '\n\nAuthor: ' + all_surveys[survey_name]["Author"])
 
 			if query == 'results':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_surveys[survey_name]["Author"]:
+				if self.check_role(client, message, 'Admin') == True or message.author.name == all_surveys[survey_name]["Author"]:
 					for x in sorted(all_surveys[survey_name]["Voters"]):
 						client.send_message(message.author, x + ' submitted: \n' + all_surveys[survey_name]["Entries"][x] +'\n')
 				else: client.send_message(message.channel, 'You do not have permission to view the survey results.')
 
 			if query == 'open':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_surveys[survey_name]["Author"]:
+				if self.check_role(client, message, 'Admin') == True or message.author.name == all_surveys[survey_name]["Author"]:
 					if all_surveys[survey_name]['Status'] == 'Open':
 						client.send_message(message.channel, 'That survey is already open.')
 					else:
@@ -300,7 +300,7 @@ class Poll(object):
 					client.send_message(message.channel, 'You do not have permission to modify this survey.')
 
 			if query == 'close':
-				if self.check_role(message, 'Admin') == True or message.author.name == all_surveys[survey_name]["Author"]:
+				if self.check_role(client, message, 'Admin') == True or message.author.name == all_surveys[survey_name]["Author"]:
 					if all_surveys[survey_name]['Status'] == 'Closed':
 						client.send_message(message.channel, 'That survey is already closed.')
 					else:
