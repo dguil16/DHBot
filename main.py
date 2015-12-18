@@ -19,7 +19,7 @@ from trivia import Trivia
 logging.basicConfig()
 
 # Create new instances of bot objects
-bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt', 'Descendants of Honor')
+bot = Chatbot('BotCred.txt', 'events.txt', 'help.txt', 'fractal.txt', 'mission.txt', 'Xorin Testing')
 remind_module = Reminder()
 trivia_module = Trivia()
 poll_module = Poll()
