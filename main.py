@@ -178,6 +178,15 @@ def on_message(message):
 		if message.content.startswith('!remindme'):
 			remind_module.run(client, message)
 
+		if message.content.startswith('!roster-copy'):
+			bot.roster_fnc(client, message, 'copy')
+
+		if message.content.startswith('!roster-formattedcopy'):
+			bot.roster_fnc(client, message, 'format')
+
+		if message.content.startswith('!roster-send'):
+			bot.roster_fnc(client, message, 'send')
+
 		if message.content.startswith('!timetoraid'):
 			pass
 
@@ -209,7 +218,9 @@ def on_message(message):
 				client.send_message(message.channel, 'You do not have permission to do that.')
 
 		if message.content.lower() == str(trivia.trivia_answer).lower():
-			if message.channel.name == 'trivia':
+			if message.channel.is_private == True:
+				pass
+			elif message.channel.name == 'trivia':
 				trivia_module.correct_answer(client, message)
 
 
