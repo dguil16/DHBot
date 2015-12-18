@@ -9,13 +9,16 @@ import discord
 class Chatbot(object):
 	"""docstring for chatbot"""
 
-	def __init__(self, credential_location, event_text_file, help_text_file, fractal_text_file, mission_text_file, server_name):
-		self.credential_location = credential_location
-		self.event_text_file = event_text_file
-		self.help_text_file = help_text_file
-		self.fractal_text_file = fractal_text_file
-		self.mission_text_file = mission_text_file
-		self.server_name = server_name
+	def __init__(self, settings_file):
+		f = open(settings_file, 'r')
+		settings = json.load(f)
+		f.close()
+		self.credential_location = settings["Credentials"]
+		self.server_name = settings["Server Name"]
+		self.event_text_file = settings["Events"]
+		self.help_text_file = settings["Help"]
+		self.fractal_text_file = settings["Fractal"]
+		self.mission_text_file = settings["Mission"]
 
 	def _weekly_event(self, event_day, event_hour, event_minute):
 		"""
