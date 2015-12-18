@@ -19,6 +19,8 @@ class Chatbot(object):
 		self.help_text_file = settings["Help"]
 		self.fractal_text_file = settings["Fractal"]
 		self.mission_text_file = settings["Mission"]
+		self.guild_id = settings["Guild ID"]
+		self.api_key = settings["API Key"]
 
 	def _weekly_event(self, event_day, event_hour, event_minute):
 		"""
@@ -297,6 +299,38 @@ class Chatbot(object):
 			client.send_message(message.channel, str(dice.roll(droll)))
 		else:
 			client.send_message(message.channel, 'Not an appropriate amount or size of dice.')
+
+	def roster_fnc(self, client, message, query):
+		if self.check_role(client, message, 'Admin') == False:
+			client.send_message(message.channel, 'You do not have permission to use the roster functions.')
+
+		elif query == 'copy':
+			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
+			full_roster = json.loads(response.text)
+			json_roster = {}
+			for x in full_roster:
+				json_roster[x["name"]] = {"rank": x["rank"], "joined": x["joined"]}
+			with open('jsonroster.txt', 'w') as g:
+				g.write(str(json.dumps(json_roster)))
+			client.send_message(message.channel, 'Roster successfully created.')
+
+		elif query == 'format':
+			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
+			full_roster = json.loads(response.text)
+			json_roster = {}
+			formatted_roster = ''
+			for x in full_roster:
+				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": x["joined"]}
+			for y in sorted(json_roster):
+				formatted_roster += y + ', ' + json_roster[y]["rank"] + ', ' + str(json_roster[y]["joined"]) + '\r\n'
+			with open('formattedroster.txt', 'w') as g:
+				g.write(formatted_roster)
+			client.send_message(message.channel, 'Roster successfully created.')
+
+		elif query == 'send':
+			client.send_message(message.author, 'Here is the requested file:')
+			client.send_file(message.author, 'formattedroster.txt')
+
 
 	def stop_bot(self, client, message):
 		if self.check_role(client, message, 'BotManager') == True:
