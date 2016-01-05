@@ -45,39 +45,39 @@ class Trivia(object):
 
 		if message.content.startswith('!trivia-start'):
 			if message.channel.is_private:
-				client.send_message(message.channel, 'This is not the appropriate channel for that.')
+				yield from client.send_message(message.channel, 'This is not the appropriate channel for that.')
 			elif message.channel.name == 'trivia':
 				set_name = message.content.partition(' ')[2]
 				all_trivia["Current Set"] = set_name
 				current_number = all_trivia[set_name]["Current Question"]
-				client.send_message(message.channel, 'Trivia is starting! It is time for the first question! \n\n' + all_trivia[set_name]["Questions"][current_number])
+				yield from client.send_message(message.channel, 'Trivia is starting! It is time for the first question! \n\n' + all_trivia[set_name]["Questions"][current_number])
 				global trivia_answer
 				trivia_answer = str(all_trivia[set_name]["Answers"][current_number])
 			else:
-				client.send_message(message.channel, 'This is not the appropriate channel for that.')
+				yield from client.send_message(message.channel, 'This is not the appropriate channel for that.')
 
 		if message.content.startswith('!trivia-end'):
 			if message.channel.is_private:
-				client.send_message(message.channel, 'This is not the appropriate channel for that.')
+				yield from client.send_message(message.channel, 'This is not the appropriate channel for that.')
 			if message.channel.name == 'trivia':
 				all_trivia["Current Set"] = ""
-				client.send_message(message.channel, 'Trivia has ended.')
+				yield from client.send_message(message.channel, 'Trivia has ended.')
 				global trivia_answer
 				trivia_answer = ''
 			else:
-				client.send_message(message.channel, 'This is not the appropriate channel for that.')
+				yield from client.send_message(message.channel, 'This is not the appropriate channel for that.')
 
 		if message.content.startswith('!trivia-next'):
 			if message.channel.is_private:
-				client.send_message(message.channel, 'This is not the appropriate channel for that.')
+				yield from client.send_message(message.channel, 'This is not the appropriate channel for that.')
 			if message.channel.name == 'trivia':
 				current_set = all_trivia["Current Set"]
 				current_number = all_trivia[current_set]["Current Question"]
-				client.send_message(message.channel, all_trivia[current_set]["Questions"][current_number])
+				yield from client.send_message(message.channel, all_trivia[current_set]["Questions"][current_number])
 				global trivia_answer
 				trivia_answer = all_trivia[current_set]["Answers"][current_number]
 			else:
-				client.send_message(message.channel, 'This is not the appropriate channel for that.')
+				yield from client.send_message(message.channel, 'This is not the appropriate channel for that.')
 
 		if message.content.startswith('!trivia-goto'):
 			question_number = message.content.partition(' ')[2]
@@ -91,7 +91,7 @@ class Trivia(object):
 		g.close()
 
 	def correct_answer(self, client, message):
-		client.send_message(message.channel, message.author.name + ' has answered the question correctly!')
+		yield from client.send_message(message.channel, message.author.name + ' has answered the question correctly!')
 		f = open('trivia.txt', 'r')
 		all_trivia = json.load(f)
 		f.close()

@@ -11,7 +11,7 @@ class Reminder(object):
 		pass
 
 	def respond(self, client, message, text):
-		client.send_message(message.author, 'Reminder: ' + text)
+		yield from client.send_message(message.author, 'Reminder: ' + text)
 
 	def run(self, client, message):
 		hours = int(message.content.split(' ', 3)[1])
@@ -20,7 +20,7 @@ class Reminder(object):
 
 		seconds = hours*60*60 + minutes*60
 
-		client.send_message(message.channel, 'Reminder set.')
+		yield from client.send_message(message.channel, 'Reminder set.')
 
 		t = threading.Timer(seconds, self.respond, [client, message, text])
 		t.start()

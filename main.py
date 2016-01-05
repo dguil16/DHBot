@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import asyncio
 import os
 import sys
 from os.path import getmtime
@@ -26,16 +27,11 @@ poll_module = Poll()
 
 # Initialize client object, begin connection
 client = discord.Client()
-client.login(bot.get_bot_credential('Username'), bot.get_bot_credential('Password'))
-
-if not client.is_logged_in:
-	print('Logging in to Discord failed')
-	exit(1)
 
 server_list = []
 
 # Event handler
-@client.event
+@client.async_event
 def on_member_join(newmember):
 	admin_users = []
 	for x in newmember.server.members:
@@ -44,13 +40,29 @@ def on_member_join(newmember):
 	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', newmember.server.channels)
 	admin_mentions = ''
 	for x in admin_users:
-		admin_mentions += ' '+str(x.mention())
-	client.send_message(notification_channel, newmember.name + ' needs permissions. {}'.format(admin_mentions))
-	client.send_message(newmember, 'Welcome to our Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text-chat and Public voice channels. If your Discord username is different from your in game GW2 name, please post in the lobby what your account name is so we can properly identify you. Please be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or, once you have permissions, by posting in the botbeta channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or Guild chat for assistance.')
+		admin_mentions += " " + (x.mention())
+	yield from client.send_message(notification_channel, newmember.name + ' needs permissions. ' + admin_mentions)
+	yield from client.send_message(newmember, 'Welcome to our Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text-chat and Public voice channels. If your Discord username is different from your in game GW2 name, please post in the lobby what your account name is so we can properly identify you. Please be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or, once you have permissions, by posting in the botbeta channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or Guild chat for assistance.')
 
-@client.event
+@client.async_event
 def on_message(message):
+
+	if message.content.startswith('!test'):
+		yield from client.send_message(message.channel, "Test successful.")
+
+	if message.content.startswith('!hello'):
+		bot.greet(client, message)
+
 	if bot.check_role(client, message, 'BotBan') == False:
+
+		if message.content.startswith('!away-set'):
+			bot.away_fnc(client, message, 'set')
+
+		if message.content.startswith('!away-return'):
+			bot.away_fnc(client, message, 'return')
+
+		if message.content.startswith('!away-whois'):
+			bot.away_fnc(client, message, 'whois')
 
 		if message.content == '!help':
 			bot.help(client, message, 'read')
@@ -184,8 +196,14 @@ def on_message(message):
 		if message.content.startswith('!roster-formattedcopy'):
 			bot.roster_fnc(client, message, 'format')
 
-		if message.content.startswith('!roster-send'):
+		if message.content.startswith('!roster-promotion'):
+			bot.roster_fnc(client, message, 'promotion')
+
+		if message.content == '!roster-send':
 			bot.roster_fnc(client, message, 'send')
+
+		if message.content.startswith('!roster-sendpromotion'):
+			bot.roster_fnc(client, message, 'send promotion')
 
 		if message.content.startswith('!timetoraid'):
 			pass
@@ -215,7 +233,7 @@ def on_message(message):
 			if bot.check_role(client, message, 'Admin') == True or bot.check_role(client, message, 'Trivia Admin') == True:
 				trivia_module.trivia_fncs(client, message)
 			else:
-				client.send_message(message.channel, 'You do not have permission to do that.')
+				yield from client.send_message(message.channel, 'You do not have permission to do that.')
 
 		if message.content.lower() == str(trivia.trivia_answer).lower():
 			if message.channel.is_private == True:
@@ -229,10 +247,10 @@ def on_message(message):
 #			pass
 
 		if '(╯°□°）╯︵ ┻━┻' in message.content:
-			client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')
+			yield from client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')
 
 
-@client.event
+@client.async_event
 def on_ready():
 	print('Logged in as')
 	print(client.user.name)
@@ -241,6 +259,8 @@ def on_ready():
 	global server_list
 	server_list = client.servers
 
-client.run()
+client.run(bot.get_bot_credential('Username'), bot.get_bot_credential('Password'))
 
-#testing
+#if not client.is_logged_in:
+#	print('Logging in to Discord failed')
+#	exit(1)
