@@ -30,6 +30,11 @@ client = discord.Client()
 
 server_list = []
 
+def yf(func):
+   def inner(*args, **kwargs):
+      yield from func(*args, **kwargs)
+   return inner
+
 # Event handler
 @client.async_event
 def on_member_join(newmember):
@@ -47,183 +52,222 @@ def on_member_join(newmember):
 @client.async_event
 def on_message(message):
 
-	if message.content.startswith('!test'):
+	if message.content.lower().startswith('!test'):
 		yield from client.send_message(message.channel, "Test successful.")
 
 	if bot.check_role(client, message, 'BotBan') == False:
 
-		if message.content.startswith('!away-set'):
+		if message.content.lower().startswith('!away-set'):
 			yield from bot.away_fnc(client, message, 'set')
 
-		if message.content.startswith('!away-return'):
+		if message.content.lower().startswith('!away-return'):
 			yield from bot.away_fnc(client, message, 'return')
 
-		if message.content.startswith('!away-whois'):
+		if message.content.lower().startswith('!away-whois'):
 			yield from bot.away_fnc(client, message, 'whois')
 
-		if message.content == '!help':
+		if message.content.lower() == '!help':
 			yield from bot.help(client, message, 'read')
 
-		if message.content == '!adminhelp':
+		if message.content.lower() == '!adminhelp':
 			yield from bot.help(client, message, 'admin')
 
-		if message.content.startswith('!help '):
+		if message.content.lower().startswith('!help '):
 			yield from bot.help(client, message, 'info')
 	
-		if message.content.startswith('!clear'):
+		if message.content.lower().startswith('!clear'):
 			yield from bot.clear(client, message)
 
-		if message.content == '!events':
+		if message.content.lower() == '!events':
 			yield from bot.file_interface(client, message, 'events', 'read')
 
-		if message.content.startswith('!events-edit'):
+		if message.content.lower().startswith('!events-edit'):
 			yield from bot.file_interface(client, message, 'events', 'write')
 
-		if message.content.startswith('!fractal '):
+		if message.content.lower().startswith('!fractal '):
 			yield from bot.fractal(client, message, 'send')
 
-		if message.content.startswith('!fractal-add'):
+		if message.content.lower().startswith('!fractal-add'):
 			yield from bot.fractal(client, message, 'add')
 
-		if message.content.startswith('!fractal-remove'):
+		if message.content.lower().startswith('!fractal-remove'):
 			yield from bot.fractal(client, message, 'remove')
 
-		if message.content.startswith('!hello'):
+		if message.content.lower().startswith('!group-create'):
+			yield from bot.group(client, message, 'create')
+
+		if message.content.lower().startswith('!group-delete'):
+			yield from bot.group(client, message, 'delete')
+
+		if message.content.lower().startswith('!group-enroll'):
+			yield from bot.group(client, message, 'enroll')
+
+		if message.content.lower().startswith('!group-add'):
+			yield from bot.group(client, message, 'add')
+
+		if message.content.lower().startswith('!group-open'):
+			yield from bot.group(client, message, 'open')
+
+		if message.content.lower().startswith('!group-close'):
+			yield from bot.group(client, message, 'close')
+
+		if message.content.lower().startswith('!group-call'):
+			yield from bot.group(client, message, 'call')
+
+		if message.content.lower().startswith('!group-remove'):
+			yield from bot.group(client, message, 'remove')
+
+		if message.content.lower().startswith('!group-unenroll'):
+			yield from bot.group(client, message, 'unenroll')
+
+		if message.content.lower().startswith('!group-list'):
+			yield from bot.group(client, message, 'list')
+
+		if message.content.lower().startswith('!group-members'):
+			yield from bot.group(client, message, 'members')
+
+		if message.content.lower().startswith('!group-info'):
+			yield from bot.group(client, message, 'info')
+
+		if message.content.lower().startswith('!hello'):
 			yield from bot.greet(client, message)
 
-		if message.content.startswith('!help-edit'):
+		if message.content.lower().startswith('!help-edit'):
 			yield from bot.help(client, message, 'edit')
 
-		if message.content.startswith('!help-add'):
+		if message.content.lower().startswith('!help-add'):
 			yield from bot.help(client, message, 'add')
 
-		if message.content.startswith('!adminhelp-add'):
+		if message.content.lower().startswith('!adminhelp-add'):
 			yield from bot.help(client, message, 'add-admin')
 
-		if message.content.startswith('!help-delete'):
+		if message.content.lower().startswith('!help-delete'):
 			yield from bot.help(client, message, 'delete')
 
-		if message.content.startswith('!adminhelp-delete'):
+		if message.content.lower().startswith('!adminhelp-delete'):
 			yield from bot.help(client, message, 'delete-admin')
 		
-		if message.content.startswith('!lmgtfy'):
+		if message.content.lower().startswith('!lmgtfy'):
 			yield from bot.lmgtfy(client, message)
 
-		if message.content.startswith('!mission'):
+		if message.content.lower().startswith('!mission'):
 			yield from bot.mission(client, message)
 
-		if message.content.startswith('!poll-create'):
+		if message.content.lower().startswith('!poll-create'):
 			yield from poll_module.poll_fnc(client, message, 'create')
 
-		if message.content.startswith('!anonpoll-create'):
+		if message.content.lower().startswith('!anonpoll-create'):
 			yield from poll_module.poll_fnc(client, message, 'create anon')
 
-		if message.content.startswith('!multipoll-create'):
+		if message.content.lower().startswith('!multipoll-create'):
 			yield from poll_module.poll_fnc(client, message, 'create multi')
 
-		if message.content.startswith('!poll-open'):
+		if message.content.lower().startswith('!poll-open'):
 			yield from poll_module.poll_fnc(client, message, 'open')
 
-		if message.content.startswith('!poll-close'):
+		if message.content.lower().startswith('!poll-close'):
 			yield from poll_module.poll_fnc(client, message, 'close')
 
-		if message.content.startswith('!poll-info'):
+		if message.content.lower().startswith('!poll-info'):
 			yield from poll_module.poll_fnc(client, message, 'info')
 
-		if message.content.startswith('!poll-delete'):
+		if message.content.lower().startswith('!poll-delete'):
 			yield from poll_module.poll_fnc(client, message, 'delete')
 
-		if message.content.startswith('!vote '):
+		if message.content.lower().startswith('!vote '):
 			yield from poll_module.poll_fnc(client, message, 'vote')
 
-		if message.content.startswith('!vote-remove'):
+		if message.content.lower().startswith('!vote-remove'):
 			yield from poll_module.poll_fnc(client, message, 'vote remove')
 
-		if message.content.startswith('!vote-change'):
+		if message.content.lower().startswith('!vote-change'):
 			yield from poll_module.poll_fnc(client, message, 'change')
 
-		if message.content.startswith('!admin-vote'):
+		if message.content.lower().startswith('!admin-vote'):
 			yield from poll_module.poll_fnc(client, message, 'admin')
 
-		if message.content.startswith('!poll-list'):
+		if message.content.lower().startswith('!poll-list'):
 			yield from poll_module.poll_fnc(client, message, 'list')
 
-		if message.content.startswith('!poll-results'):
+		if message.content.lower().startswith('!poll-results'):
 			yield from poll_module.poll_fnc(client, message, 'results')
 
-		if message.content.startswith('!survey-create'):
+		if message.content.lower().startswith('!survey-create'):
 			yield from poll_module.survey_fnc(client, message, 'create')
 
-		if message.content.startswith('!survey-open'):
+		if message.content.lower().startswith('!survey-open'):
 			yield from poll_module.survey_fnc(client, message, 'open')
 
-		if message.content.startswith('!survey-close'):
+		if message.content.lower().startswith('!survey-close'):
 			yield from poll_module.survey_fnc(client, message, 'close')
 
-		if message.content.startswith('!survey-info'):
+		if message.content.lower().startswith('!survey-info'):
 			yield from poll_module.survey_fnc(client, message, 'info')
 
-		if message.content.startswith('!survey-delete'):
+		if message.content.lower().startswith('!survey-delete'):
 			yield from poll_module.survey_fnc(client, message, 'delete')
 
-		if message.content.startswith('!survey-submit'):
+		if message.content.lower().startswith('!survey-submit'):
 			yield from poll_module.survey_fnc(client, message, 'submit')
 
-		if message.content.startswith('!survey-change'):
+		if message.content.lower().startswith('!survey-change'):
 			yield from poll_module.survey_fnc(client, message, 'change')
 
-		if message.content.startswith('!survey-list'):
+		if message.content.lower().startswith('!survey-list'):
 			yield from poll_module.survey_fnc(client, message, 'list')
 
-		if message.content.startswith('!survey-results'):
+		if message.content.lower().startswith('!survey-results'):
 			yield from poll_module.survey_fnc(client, message, 'results')
 
-		if message.content.startswith('!price'):
+		if message.content.lower().startswith('!price'):
 			yield from bot.price(client, message)
 
-		if message.content.startswith('!purge'):
+		if message.content.lower().startswith('!purge'):
 			yield from bot.purge(client, message)
 
-		if message.content.startswith('!remindme'):
+		if message.content.lower().startswith('!remindme'):
 			yield from remind_module.run(client, message)
 
-		if message.content.startswith('!roster-copy'):
+		#if message.content.lower().startswith('!reminder'):
+		#	yield from remind_module.run(client, message, 'public')
+
+		if message.content.lower().startswith('!roster-copy'):
 			yield from bot.roster_fnc(client, message, 'copy')
 
-		if message.content.startswith('!roster-formattedcopy'):
+		if message.content.lower().startswith('!roster-formattedcopy'):
 			yield from bot.roster_fnc(client, message, 'format')
 
-		if message.content.startswith('!roster-promotion'):
+		if message.content.lower().startswith('!roster-promotion'):
 			yield from bot.roster_fnc(client, message, 'promotion')
 
-		if message.content == '!roster-send':
+		if message.content.lower() == '!roster-send':
 			yield from bot.roster_fnc(client, message, 'send')
 
-		if message.content.startswith('!roster-sendpromotion'):
+		if message.content.lower().startswith('!roster-sendpromotion'):
 			yield from bot.roster_fnc(client, message, 'send promotion')
 
-		if message.content.startswith('!timetohot'):
+		if message.content.lower().startswith('!timetohot'):
 			yield from bot.time_to_hot(client, message)
 
-		if message.content.startswith('!timetomissions'):
+		if message.content.lower().startswith('!timetomissions'):
 			yield from bot.time_to_missions(client, message)
 
-		if message.content.startswith('!timetoreset'):
+		if message.content.lower().startswith('!timetoreset'):
 			yield from bot.time_to_reset(client, message)
 
-		if message.content.startswith('!timetowvwreset'):
+		if message.content.lower().startswith('!timetowvwreset'):
 			yield from bot.time_to_wvw_reset(client, message)
 
-		if message.content.startswith('!quit'):
+		if message.content.lower().startswith('!quit'):
 			yield from bot.stop_bot(client, message)
 
-		if message.content.startswith('!roll'):
+		if message.content.lower().startswith('!roll'):
 			yield from bot.roll_dice(client, message)
 		
-		if message.content.startswith('!wiki'):
+		if message.content.lower().startswith('!wiki'):
 			yield from bot.wiki(client, message)
 
-		if message.content.startswith('!trivia'):
+		if message.content.lower().startswith('!trivia'):
 			if bot.check_role(client, message, 'Admin') == True or bot.check_role(client, message, 'Trivia Admin') == True:
 				yield from trivia_module.trivia_fncs(client, message)
 			else:
@@ -234,11 +278,6 @@ def on_message(message):
 				pass
 			elif message.channel.name == 'trivia':
 				yield from trivia_module.correct_answer(client, message)
-
-
-# This will have to wait until the new gw2 api, which should contain this information.
-#		if message.content.startswith('!worldbosses'):
-#			pass
 
 		if '(╯°□°）╯︵ ┻━┻' in message.content:
 			yield from client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')

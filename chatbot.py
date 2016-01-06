@@ -278,6 +278,127 @@ class Chatbot(object):
 		x.close()
 		return bot_json[credential]
 
+	def group(self, client, message, query):
+		try:
+			with open('groups.txt', 'r') as f:
+				all_groups = json.load(f)
+
+			if query == 'create':
+				if self.check_role(client, message, 'Leadership') == False:
+					yield from client.send_message(message.channel, 'You do not have permission to create a group.')
+				else:
+					group_info = message.content.partition(' ')[2].split('; ')
+					group_name = group_info[0]
+					group_description = group_info[1]
+					group_restriction = group_info[2].lower()
+					all_groups[group_name.lower()] = {"name": group_name, "members": [], "description": group_description, "restriction": group_restriction}
+					yield from client.send_message(message.channel, 'Your group has been created.')
+
+			if query == 'delete':
+				if self.check_role(client, message, 'Admin') == False:
+					yield from client.send_message(message.channel, 'You do not have permission to delete a group.')
+				else:
+					group_name = message.content.partition(' ')[2].lower()
+					group_Name = all_groups[group_name]["name"]
+					del all_groups[group_name]
+					yield from client.send_message(message.channel, 'The group {} has been deleted.'.format(group_Name))
+
+			if query == 'enroll':
+				group_name = message.content.partition(' ')[2].lower()
+				if all_groups[group_name]["restriction"] == 'closed':
+					yield from client.send_message(message.channel, 'You will need a member of Leadership to add you to that list.')
+				else:
+					all_groups[group_name]["members"] += [message.author.name]
+					yield from client.send_message(message.channel, "You have been added to the {} group.".format(all_groups[group_name]["name"]))
+
+			if query == 'add':
+				group_info = message.content.partition(' ')[2].split('; ')
+				group_name = group_info[0].lower()
+				member_name = group_info[1]
+				if self.check_role(client, message, 'Admin') == False:
+					yield from client.send_message(message.channel, 'You do not have permission to add members to this group.')
+				elif member_name in all_groups[group_name]["members"]:
+					yield from client.send_message(message.channel, "{} is already a member of that group.".format(member_name))
+				else:
+					all_groups[group_name]["members"] += [member_name]
+					yield from client.send_message(message.channel, "You have added {} to the group {}.".format(member_name, all_groups[group_name]["name"]))
+
+			if query == 'open':
+				group_name = message.content.partition(' ')[2].lower()
+				if all_groups[group_name]["restriction"] == "open":
+					yield from client.send_message(message.channel, 'That group is already open.')
+				else:
+					all_groups[group_name]["restriction"] = "open"
+					yield from client.send_message(message.channel, '{} is now an open group.'.format(all_groups[group_name]["name"]))
+
+			if query == 'close':
+				group_name = message.content.partition(' ')[2].lower()
+				if all_groups[group_name]["restriction"] == "closed":
+					yield from client.send_message(message.channel, 'That group is already closed.')
+				else:
+					all_groups[group_name]["restriction"] = "closed"
+					yield from client.send_message(message.channel, '{} is now a closed group.'.format(all_groups[group_name]["name"]))
+
+			if query == 'call':
+				group_name = message.content.partition(' ')[2].lower()
+				if group_name not in all_groups:
+					yield from client.send_message(message.channel, "There is no group with that name.")
+				else:
+					mention_list = ''
+					serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+					for x in all_groups[group_name]["members"]:
+						user = discord.utils.find(lambda m: m.name == x, serv.members)
+						if user == 'None':
+							all_groups[group_name]["members"].remove(x)
+							yield from client.send_message(message.channel, '{} was removed from the group {} because they are not a member of this server.'.format(x, all_groups[group_name]["name"]))
+						else:
+							mention_list += str(user.mention) + ' '
+					yield from client.send_message(message.channel, mention_list)
+
+			if query == 'remove':
+				group_name = message.content.partition(' ')[2].split('; ')[0].lower()
+				member_name = message.content.partition(' ')[2].split('; ')[1]
+				
+				if self.check_role(client, message, 'Admin') == False:
+					yield from client.send_message(message.channel, "You do not have permission to remove members from a group.")
+				elif member_name in all_groups[group_name]["members"]:
+					all_groups[group_name]["members"].remove(member_name)
+					yield from client.send_message(message.channel, "{} has removed {} from the group {}.".format(message.author.name, member_name, all_groups[group_name]["name"]))
+				else:
+					yield from client.send_message(message.channel, "{} is not a member of that group.".format(member_name))
+
+			if query == 'unenroll':
+				group_name = message.content.partition(' ')[2].lower()
+				if message.author.name in all_groups[group_name]["members"]:
+					all_groups[group_name]["members"].remove(message.author.name)
+					yield from client.send_message(message.channel, "You have been removed from the group {}.".format(all_groups[group_name]["name"]))
+				else:
+					yield from client.send_message(message.channel, "You are not a member of that group.")
+
+			if query == 'list':
+				group_list = ''
+				for x in sorted(all_groups):
+					group_list += '{}: {}\n'.format(all_groups[x]["name"], all_groups[x]["description"])
+				yield from client.send_message(message.channel, "The following is a list of available groups and their descriptions:")
+				yield from client.send_message(message.channel, group_list)
+
+			if query == 'members':
+				member_list = ''
+				group_name = group_name = message.content.partition(' ')[2].lower()
+				for x in sorted(all_groups[group_name]["members"]):
+					member_list += '{}, '.format(x)
+				member_list = member_list[:-2]
+				yield from client.send_message(message.channel, 'The following is a list of members of the group {}:\n{}'.format(all_groups[group_name]["name"], member_list))
+
+			if query == 'info':
+				group_name = group_name = message.content.partition(' ')[2].lower()
+				yield from client.send_message(message.channel, "{}: {}".format(all_groups[group_name]["name"], all_groups[group_name]["description"]))
+
+			with open('groups.txt', 'w') as f:
+				f.write(str(json.dumps(all_groups)))
+		except:
+			yield from client.send_message(message.channel, "There was an error processing your request.")
+
 	def greet(self, client, message):
 		yield from client.send_message(message.channel, 'Howdy {}!'.format(message.author.mention))
 
