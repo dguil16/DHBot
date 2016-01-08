@@ -63,7 +63,8 @@ def on_message(message):
 
 		if message.content.startswith('{}'.format(client.user.mention)):
 			cb_message = message.content.partition(' ')[2]
-			yield from client.send_message(message.channel, clever_bot.Ask(str(cb_message)))
+			answer = clever_bot.Ask(str(cb_message))
+			yield from client.send_message(message.channel, str(answer))
 
 		if message.content.lower().startswith('!away-set'):
 			yield from bot.away_fnc(client, message, 'set')
