@@ -9,6 +9,7 @@ import trivia
 
 import discord
 
+from cleverbot import cleverbot
 from chatbot import Chatbot
 from polls import Poll
 from reminder import Reminder
@@ -24,6 +25,9 @@ bot = Chatbot('settings.txt')
 remind_module = Reminder()
 trivia_module = Trivia()
 poll_module = Poll()
+
+#cleverbot object
+clever_bot = cleverbot.Session()
 
 # Initialize client object, begin connection
 client = discord.Client()
@@ -56,6 +60,10 @@ def on_message(message):
 		yield from client.send_message(message.channel, "Test successful.")
 
 	if bot.check_role(client, message, 'BotBan') == False:
+
+		if message.content.startswith('{}'.format(client.user.mention)):
+			cb_message = message.content.partition(' ')[2]
+			yield from client.send_message(message.channel, clever_bot.Ask(str(cb_message)))
 
 		if message.content.lower().startswith('!away-set'):
 			yield from bot.away_fnc(client, message, 'set')
