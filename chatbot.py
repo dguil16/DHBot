@@ -18,7 +18,6 @@ class Chatbot(object):
 		self.server_name = settings["Server Name"]
 		self.event_text_file = settings["Events"]
 		self.help_text_file = settings["Help"]
-		self.fractal_text_file = settings["Fractal"]
 		self.mission_text_file = settings["Mission"]
 		self.guild_id = settings["Guild ID"]
 		self.api_key = settings["API Key"]
@@ -78,9 +77,12 @@ class Chatbot(object):
 		away = json.load(f)
 		f.close()
 		if query == 'set':
-			away_data = message.content.partition(' ')[2]
-			account_name = away_data.partition('; ')[0]
-			duration = away_data.partition('; ')[2]
+			try:
+				away_data = message.content.partition(' ')[2]
+				account_name = away_data.partition('; ')[0]
+				duration = int(away_data.partition('; ')[2])
+			except:
+				yield from client.send_message(message.channel, "There was an error processing your request. You may need to ensure the duration is an integer.")
 			if message.author.name in away:
 				yield from client.send_message(message.channel, 'You are already set as away.')
 			else:
@@ -95,6 +97,7 @@ class Chatbot(object):
 				yield from client.send_message(message.channel, 'You are not currently set as away.')
 			else:
 				del away[message.author.name]
+				yield from client.send_message(message.channel, "You are no longer set as away.")
 				f = open(self.away_list, 'w')
 				f.write(str(json.dumps(away)))
 				f.close()
@@ -103,7 +106,15 @@ class Chatbot(object):
 			if self.check_role(client, message, 'Admin') == False and self.check_role(client, message, 'Leadership') == False:
 				yield from client.send_message(message.channel, "You do not have permission to view the away list.")
 			else:
-				yield from client.send_message(message.author, "The current members are set as away:")
+				with open(self.away_list, 'r') as f:
+					json_away = json.load(f)
+				formatted_away = 'Discord Name, GW2 Account Name, Date Set Away, Away Duration (in Days) \r\n'
+				for x in sorted(json_away):
+					formatted_away += "{}, {}, {}, {} \r\n".format(x, json_away[x]["Account Name"], json_away[x]["Away on"], json_away[x]["Duration"])
+				with open('formatted_away.txt', 'w') as f:
+					f.write(formatted_away)
+				yield from client.send_message(message.author, 'Here is the requested file:')
+				yield from client.send_file(message.author, 'formatted_away.txt')
 
 
 	def check_role(self, client, message_or_member, role_test):
@@ -235,42 +246,6 @@ class Chatbot(object):
 		else:
 			yield from client.send_message(message.channel, 'I can\'t let you do that, ' + message.author.name +'.')
 
-	def fractal(self, client, message, query):
-		fractal_level = message.content.partition(' ')[2]
-		f = open(self.fractal_text_file, 'r')
-		fractal_list = json.load(f)
-		f.close()
-
-		if query == 'send':
-			fractal_members = []
-			fractal_mentions = ''
-			for x in fractal_list[fractal_level]:
-				user = discord.utils.find(lambda m: m.name == x, message.channel.server.members)
-				fractal_members += [user]
-			for x in fractal_members:
-				fractal_mentions += str(x.mention) + ' '
-			yield from client.send_message(message.channel, 'Would you like to do a ' + str(fractal_level) + ' fractal? ' + str(fractal_mentions))
-
-		elif query == 'add':
-			if message.author.name not in fractal_list[fractal_level]:
-				fractal_list[fractal_level].append(message.author.name)
-				with open(self.fractal_text_file, 'w') as g:
-					g.write(str(json.dumps(fractal_list)))
-				yield from client.delete_message(message)
-				yield from client.send_message(message.channel, str(message.author.name) + ', you have been added to the fractal ' +str(fractal_level) + ' list.')
-			else:
-				yield from client.send_message(message.channel, str(message.author.name) + ', you are already on that list.')
-
-		elif query == 'remove':
-			if message.author.name in fractal_list[fractal_level]:
-				fractal_list[fractal_level].remove(message.author.name)
-				with open(self.fractal_text_file, 'w') as g:
-					g.write(str(json.dumps(fractal_list)))
-				yield from client.delete_message(message)
-				yield from client.send_message(message.channel, str(message.author.name) + ', you have been removed from the fractal level ' +str(fractal_level) + ' list.')
-			else:
-				yield from client.send_message(message.channel, str(message.author.name) + ', you are not currently on the fractal level ' +str(fractal_level) + ' list.')
-
 	def get_bot_credential(self, credential):
 		""" Extracts the paramater credential from a formatted text file """
 		x = open(self.credential_location, 'r')
@@ -292,7 +267,7 @@ class Chatbot(object):
 					group_description = group_info[1]
 					group_restriction = group_info[2].lower()
 					all_groups[group_name.lower()] = {"name": group_name, "members": [], "description": group_description, "restriction": group_restriction}
-					yield from client.send_message(message.channel, 'Your group has been created.')
+					yield from client.send_message(message.channel, '{} has created the group {}.'.format(message.author.name, group_name))
 
 			if query == 'delete':
 				if self.check_role(client, message, 'Admin') == False:
@@ -301,12 +276,14 @@ class Chatbot(object):
 					group_name = message.content.partition(' ')[2].lower()
 					group_Name = all_groups[group_name]["name"]
 					del all_groups[group_name]
-					yield from client.send_message(message.channel, 'The group {} has been deleted.'.format(group_Name))
+					yield from client.send_message(message.channel, '{} has deleted the group {}.'.format(message.author.name, group_Name))
 
 			if query == 'enroll':
 				group_name = message.content.partition(' ')[2].lower()
 				if all_groups[group_name]["restriction"] == 'closed':
 					yield from client.send_message(message.channel, 'You will need a member of Leadership to add you to that list.')
+				elif message.author in all_groups[group_name]["members"]:
+					yield from client.send_message(message.channel, "You are already a member of that group.")
 				else:
 					all_groups[group_name]["members"] += [message.author.name]
 					yield from client.send_message(message.channel, "You have been added to the {} group.".format(all_groups[group_name]["name"]))
@@ -315,29 +292,35 @@ class Chatbot(object):
 				group_info = message.content.partition(' ')[2].split('; ')
 				group_name = group_info[0].lower()
 				member_name = group_info[1]
-				if self.check_role(client, message, 'Admin') == False:
+				if self.check_role(client, message, 'Leadership') == False:
 					yield from client.send_message(message.channel, 'You do not have permission to add members to this group.')
 				elif member_name in all_groups[group_name]["members"]:
 					yield from client.send_message(message.channel, "{} is already a member of that group.".format(member_name))
 				else:
 					all_groups[group_name]["members"] += [member_name]
-					yield from client.send_message(message.channel, "You have added {} to the group {}.".format(member_name, all_groups[group_name]["name"]))
+					yield from client.send_message(message.channel, "{} has added {} to the group {}.".format(message.author.name, member_name, all_groups[group_name]["name"]))
 
 			if query == 'open':
-				group_name = message.content.partition(' ')[2].lower()
-				if all_groups[group_name]["restriction"] == "open":
-					yield from client.send_message(message.channel, 'That group is already open.')
+				if self.check_role(client, message, 'Admin') == False:
+					client.send_message(message.channel, 'You do not have permission to do that.')
 				else:
-					all_groups[group_name]["restriction"] = "open"
-					yield from client.send_message(message.channel, '{} is now an open group.'.format(all_groups[group_name]["name"]))
+					group_name = message.content.partition(' ')[2].lower()
+					if all_groups[group_name]["restriction"] == "open":
+						yield from client.send_message(message.channel, 'That group is already open.')
+					else:
+						all_groups[group_name]["restriction"] = "open"
+						yield from client.send_message(message.channel, '{} is now an open group.'.format(all_groups[group_name]["name"]))
 
 			if query == 'close':
-				group_name = message.content.partition(' ')[2].lower()
-				if all_groups[group_name]["restriction"] == "closed":
-					yield from client.send_message(message.channel, 'That group is already closed.')
+				if self.check_role(client, message, 'Admin') == False:
+					client.send_message(message.channel, 'You do not have permission to do that.')
 				else:
-					all_groups[group_name]["restriction"] = "closed"
-					yield from client.send_message(message.channel, '{} is now a closed group.'.format(all_groups[group_name]["name"]))
+					group_name = message.content.partition(' ')[2].lower()
+					if all_groups[group_name]["restriction"] == "closed":
+						yield from client.send_message(message.channel, 'That group is already closed.')
+					else:
+						all_groups[group_name]["restriction"] = "closed"
+						yield from client.send_message(message.channel, '{} is now a closed group.'.format(all_groups[group_name]["name"]))
 
 			if query == 'call':
 				group_name = message.content.partition(' ')[2].lower()
@@ -353,7 +336,7 @@ class Chatbot(object):
 							yield from client.send_message(message.channel, '{} was removed from the group {} because they are not a member of this server.'.format(x, all_groups[group_name]["name"]))
 						else:
 							mention_list += str(user.mention) + ' '
-					yield from client.send_message(message.channel, mention_list)
+					yield from client.send_message(message.channel, "{} has called the group {}:\n{}".format(message.author, all_groups[group_name]["name"], mention_list))
 
 			if query == 'remove':
 				group_name = message.content.partition(' ')[2].split('; ')[0].lower()

@@ -84,15 +84,6 @@ def on_message(message):
 		if message.content.lower().startswith('!events-edit'):
 			yield from bot.file_interface(client, message, 'events', 'write')
 
-		if message.content.lower().startswith('!fractal '):
-			yield from bot.fractal(client, message, 'send')
-
-		if message.content.lower().startswith('!fractal-add'):
-			yield from bot.fractal(client, message, 'add')
-
-		if message.content.lower().startswith('!fractal-remove'):
-			yield from bot.fractal(client, message, 'remove')
-
 		if message.content.lower().startswith('!group-create'):
 			yield from bot.group(client, message, 'create')
 
