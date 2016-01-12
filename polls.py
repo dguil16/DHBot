@@ -6,12 +6,13 @@ class Poll(object):
 		pass
 
 	def check_role(self, client, message_or_member, role_test):
+		serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
 		if isinstance(message_or_member, discord.message.Message) == True:
 			msg = message_or_member
-			mem = discord.utils.find(lambda m: m.id == msg.author.id, msg.channel.server.members)
+			mem = discord.utils.find(lambda m: m.id == msg.author.id, serv.members)
 		elif isinstance(message_or_member, (discord.user.User)) == True:
 			member = message_or_member
-			mem = discord.utils.find(lambda m: m.id == member.id, member.server.members)
+			mem = discord.utils.find(lambda m: m.id == member.id, serv.members)
 
 		user_roles = []
 		for x in mem.roles:
