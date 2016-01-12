@@ -234,8 +234,8 @@ def on_message(message):
 		if message.content.lower().startswith('!roster-copy'):
 			yield from bot.roster_fnc(client, message, 'copy')
 
-#		if message.content.lower().startswith('!roster-formattedcopy'):
-#			yield from bot.roster_fnc(client, message, 'format')
+		if message.content.lower().startswith('!roster-formattedcopy'):
+			yield from bot.roster_fnc(client, message, 'format')
 
 		if message.content.lower().startswith('!roster-promotion'):
 			yield from bot.roster_fnc(client, message, 'promotion')
