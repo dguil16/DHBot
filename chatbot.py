@@ -440,20 +440,20 @@ class Chatbot(object):
 			yield from client.send_message(message.channel, 'Not an appropriate amount or size of dice.')
 
 	def roster_fnc(self, client, message, query):
-		if self.check_role(client, message, 'Admin') == False:
+		if self.check_role(client, message, 'Leadership') == False:
 			yield from client.send_message(message.channel, 'You do not have permission to use the roster functions.')
 
-		elif query == 'copy':
-			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
-			full_roster = json.loads(response.text)
-			json_roster = {}
-			for x in full_roster:
-				json_roster[x["name"]] = {"rank": x["rank"], "joined": x["joined"]}
-			with open('jsonroster.txt', 'w') as g:
-				g.write(str(json.dumps(json_roster)))
-			yield from client.send_message(message.channel, 'Roster successfully created.')
+#		elif query == 'copy':
+#			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
+#			full_roster = json.loads(response.text)
+#			json_roster = {}
+#			for x in full_roster:
+#				json_roster[x["name"]] = {"rank": x["rank"], "joined": x["joined"]}
+#			with open('jsonroster.txt', 'w') as g:
+#				g.write(str(json.dumps(json_roster)))
+#			yield from client.send_message(message.channel, 'Roster successfully created.')
 
-		elif query == 'format':
+		elif query == 'copy':
 			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
 			full_roster = json.loads(response.text)
 			json_roster = {}
