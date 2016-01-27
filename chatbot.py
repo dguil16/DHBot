@@ -245,6 +245,45 @@ class Chatbot(object):
 		else:
 			await client.send_message(message.channel, 'I can\'t let you do that, ' + message.author.name +'.')
 
+	async def displayname(self, client, message, query):
+		x = open("display_names.txt", 'r')
+		disp_names = json.load(x)
+		x.close()
+
+		if query == 'self':
+			if message.author.id in disp_names:
+				await client.send_message(message.channel, "Your display name has alread been entered as {}. If this is not correct, please inform an Admin.".format(disp_names[message.author.id]))
+			else:
+				error_check = message.content.partition(' ')[2].partition('.')
+				if len(error_check) == 4:
+					disp_names[message.author.id] = message.content.partition(' ')[2]
+					await client.send_message(message.channel, "Your display name has been entered as {}. If you made an error, please contact an Admin.")
+				else:
+					await client.send_message(message.channel, "Please ensure that you include the 4 digits at the end of your display name.")
+
+		if query == 'set':
+			if self.check_role(client, message, 'Admin') == True:
+				discord_id = message.content.partition(' ')[2].partition('; ')[0]
+				disp_name = message.content.partition(' ')[2].partition('; ')[2]
+				error_check = disp_name.partition('.')
+				if len(error_check[2]) == 4:
+					serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+					member = discord.utils.find(lambda m: m.id == discord_id, serv.members)
+					if member.id in disp_names:
+						old_name = disp_names[member.id]
+					else:
+						old_name = "N/A"
+					disp_names[member.id] = disp_name
+					await client.send_message(message.channel, "{} has changed {}'s display name from {} to {}.".format(message.author, member.name, old_name, disp_name))
+				else:
+					await client.send_message(message.channel, "Please ensure that you include the 4 digits at the end of your display name.")
+			else:
+				await client.send_message(message.channel, "You do not have permission to set display names.")
+
+		y = open("display_names.txt", 'w')
+		y.write(str(json.dumps(disp_names)))
+		y.close()
+
 	def get_bot_credential(self, credential):
 		""" Extracts the paramater credential from a formatted text file """
 		x = open(self.credential_location, 'r')
@@ -253,7 +292,7 @@ class Chatbot(object):
 		return bot_json[credential]
 
 	async def group(self, client, message, query):
-		try:
+		#try:
 			with open('groups.txt', 'r') as f:
 				all_groups = json.load(f)
 
@@ -281,23 +320,69 @@ class Chatbot(object):
 				group_name = message.content.partition(' ')[2].lower()
 				if all_groups[group_name]["restriction"] == 'closed':
 					await client.send_message(message.channel, 'You will need a member of Leadership to add you to that list.')
-				elif message.author in all_groups[group_name]["members"]:
+				elif message.author.id in all_groups[group_name]["members"]:
 					await client.send_message(message.channel, "You are already a member of that group.")
 				else:
-					all_groups[group_name]["members"] += [message.author.name]
+					all_groups[group_name]["members"] += [message.author.id]
 					await client.send_message(message.channel, "You have been added to the {} group.".format(all_groups[group_name]["name"]))
 
-			if query == 'add':
+			if query == 'add' or query =='remove':
 				group_info = message.content.partition(' ')[2].split('; ')
 				group_name = group_info[0].lower()
 				member_name = group_info[1]
+				serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
 				if self.check_role(client, message, 'Leadership') == False:
 					await client.send_message(message.channel, 'You do not have permission to add members to this group.')
-				elif member_name in all_groups[group_name]["members"]:
-					await client.send_message(message.channel, "{} is already a member of that group.".format(member_name))
 				else:
-					all_groups[group_name]["members"] += [member_name]
-					await client.send_message(message.channel, "{} has added {} to the group {}.".format(message.author.name, member_name, all_groups[group_name]["name"]))
+					cnt = 0
+					for x in serv.members:
+						if x.name == member_name:
+							cnt += 1
+
+					if cnt == 0:
+						await client.send_message(message.channel, "There is no member with the name {}.".format(member_name))
+					if cnt > 1:
+						await client.send_message(message.channel, "There is more than one member with the name {}. Please use their Discord ID.".format(member_name))
+					if cnt == 1:
+						member = discord.utils.find(lambda m: m.name == member_name, serv.members)
+
+						if query == 'add':
+							if member.id in all_groups[group_name]["members"]:
+								await client.send_message(message.channel, "{} is already a member of that group.".format(member_name))
+							else:
+								all_groups[group_name]["members"] += [member.id]
+								await client.send_message(message.channel, "{} has added {} to the group {}.".format(message.author.name, member_name, all_groups[group_name]["name"]))
+
+						if query == 'remove':
+							if member.id in all_groups[group_name]["members"]:
+								all_groups[group_name]["members"].remove(member.id)
+								await client.send_message(message.channel, "{} has removed {} from the group {}.".format(message.author.name, member.name, all_groups[group_name]["name"]))
+							else:
+								await client.send_message(message.channel, "{} is not a member of that group.".format(member.name))
+
+
+			if query == 'add_id' or query == 'remove_id':
+				group_info = message.content.partition(' ')[2].split('; ')
+				group_name = group_info[0].lower()
+				member_id = group_info[1]
+				serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+				member = discord.utils.find(lambda m: m.id == member_id, serv.members)
+				if self.check_role(client, message, 'Leadership') == False:
+					await client.send_message(message.channel, 'You do not have permission to add members to this group.')
+
+				if query == 'add_id':
+					if member.id in all_groups[group_name]["members"]:
+						await client.send_message(message.channel, "{} is already a member of that group.".format(member.name))
+					else:
+						all_groups[group_name]["members"] += [member.id]
+						await client.send_message(message.channel, "{} has added {} to the group {}.".format(message.author.name, member.name, all_groups[group_name]["name"]))
+
+				if query == 'remove_id':
+					if member.id in all_groups[group_name]["members"]:
+						all_groups[group_name]["members"].remove(member.id)
+						await client.send_message(message.channel, "{} has removed {} from the group {}.".format(message.author.name, member.name, all_groups[group_name]["name"]))
+					else:
+						await client.send_message(message.channel, "{} is not a member of that group.".format(member.name))
 
 			if query == 'open':
 				if self.check_role(client, message, 'Admin') == False:
@@ -329,30 +414,18 @@ class Chatbot(object):
 					mention_list = ''
 					serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
 					for x in all_groups[group_name]["members"]:
-						user = discord.utils.find(lambda m: m.name == x, serv.members)
+						user = discord.utils.find(lambda m: m.id == x, serv.members)
 						if user == 'None':
 							all_groups[group_name]["members"].remove(x)
-							await client.send_message(message.channel, '{} was removed from the group {} because they are not a member of this server.'.format(x, all_groups[group_name]["name"]))
+							await client.send_message(message.channel, 'User ID {} was removed from the group {} because they are not a member of this server.'.format(x, all_groups[group_name]["name"]))
 						else:
-							mention_list += str(user.mention) + ' '
+							mention_list += '<@'+x+'> '
 					await client.send_message(message.channel, "{} has called the group {}:\n{}".format(message.author, all_groups[group_name]["name"], mention_list))
-
-			if query == 'remove':
-				group_name = message.content.partition(' ')[2].split('; ')[0].lower()
-				member_name = message.content.partition(' ')[2].split('; ')[1]
-				
-				if self.check_role(client, message, 'Admin') == False:
-					await client.send_message(message.channel, "You do not have permission to remove members from a group.")
-				elif member_name in all_groups[group_name]["members"]:
-					all_groups[group_name]["members"].remove(member_name)
-					await client.send_message(message.channel, "{} has removed {} from the group {}.".format(message.author.name, member_name, all_groups[group_name]["name"]))
-				else:
-					await client.send_message(message.channel, "{} is not a member of that group.".format(member_name))
 
 			if query == 'unenroll':
 				group_name = message.content.partition(' ')[2].lower()
-				if message.author.name in all_groups[group_name]["members"]:
-					all_groups[group_name]["members"].remove(message.author.name)
+				if message.author.id in all_groups[group_name]["members"]:
+					all_groups[group_name]["members"].remove(message.author.id)
 					await client.send_message(message.channel, "You have been removed from the group {}.".format(all_groups[group_name]["name"]))
 				else:
 					await client.send_message(message.channel, "You are not a member of that group.")
@@ -378,11 +451,22 @@ class Chatbot(object):
 
 			with open('groups.txt', 'w') as f:
 				f.write(str(json.dumps(all_groups)))
-		except:
-			await client.send_message(message.channel, "There was an error processing your request.")
+		#except:
+		#	await client.send_message(message.channel, "There was an error processing your request.")
 
 	async def greet(self, client, message):
 		await client.send_message(message.channel, 'Howdy {}!'.format(message.author.mention))
+
+	async def id_fnc(self, client, message, query):
+		if query == 'self':
+			await client.send_message(message.channel, 'Your Discord ID is: {}'.format(message.author.id))
+
+		if query =='other':
+			name = message.content.partition(' ')[2]
+			serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+			for x in serv.members:
+				if x.name == name:
+					await client.send_message(message.author, "The ID for {} is {}".format(x.name, x.id))
 
 	async def lmgtfy(self, client, message):
 		search = message.content.partition(' ')[2].replace(' ','+')
