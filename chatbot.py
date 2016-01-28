@@ -255,9 +255,9 @@ class Chatbot(object):
 				await client.send_message(message.channel, "Your display name has alread been entered as {}. If this is not correct, please inform an Admin.".format(disp_names[message.author.id]))
 			else:
 				error_check = message.content.partition(' ')[2].partition('.')
-				if len(error_check) == 4:
+				if len(error_check[2]) == 4:
 					disp_names[message.author.id] = message.content.partition(' ')[2]
-					await client.send_message(message.channel, "Your display name has been entered as {}. If you made an error, please contact an Admin.")
+					await client.send_message(message.channel, "Your display name has been entered as {}. If you made an error, please contact an Admin.".format(message.content.partition(' ')[2]))
 				else:
 					await client.send_message(message.channel, "Please ensure that you include the 4 digits at the end of your display name.")
 
