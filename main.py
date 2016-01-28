@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import asyncio
+import json
 import os
 import sys
 from os.path import getmtime
@@ -9,7 +10,7 @@ import trivia
 
 import discord
 
-#from cleverbot import cleverbot
+from cleverbot import cleverbot
 from chatbot import Chatbot
 from polls import Poll
 from reminder import Reminder
@@ -27,7 +28,7 @@ trivia_module = Trivia()
 poll_module = Poll()
 
 #cleverbot object
-#clever_bot = cleverbot.Session()
+clever_bot = cleverbot.Session()
 
 # Initialize client object, begin connection
 client = discord.Client()
@@ -49,17 +50,32 @@ async def on_member_join(newmember):
 	await client.send_message(newmember, 'Welcome to our Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text-chat and Public voice channels. If your Discord username is different from your in game GW2 name, please post in the lobby what your account name is so we can properly identify you. Please be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or, once you have permissions, by posting in the botbeta channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or Guild chat for assistance.')
 
 @client.event
+async def on_member_update(before, after):
+	if str(before.status) == 'offline' and str(after.status) == 'online' and bot.check_role(client, after, "Member") == True:
+			x = open("display_names.txt", 'r')
+			disp_names = json.load(x)
+			x.close()
+			if after.id not in disp_names:
+				await client.send_message(after, "Your GW2 Display Name is not listed in our database. Please enter `!displayname <GW2 Display name>` (without <>) in Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
+
+	if str(before.status) == 'offline' and str(after.status) == 'online' and after.name == "Scottzilla":
+		await client.send_message(after, ":boom: Happy birthday! :boom:")
+
+@client.event
 async def on_message(message):
 
-	if message.content.lower().startswith('!test'):
-		await client.send_message(message.channel, "Test successful.")
+#	if message.content.lower().startswith('!test'):
+#		await client.send_message(message.channel, "Test successful.")
+
+	if message.content == "!groupupdate":
+		await bot.groupupdate(client, message)
 
 	if bot.check_role(client, message, 'BotBan') == False:
 
-		#if message.content.startswith('{}'.format(client.user.mention)):
-		#	cb_message = message.content.partition(' ')[2]
-		#	answer = clever_bot.Ask(str(cb_message))
-		#	await client.send_message(message.channel, str(answer))
+		if message.content.startswith('{}'.format(client.user.mention)):
+			cb_message = message.content.partition(' ')[2]
+			answer = clever_bot.Ask(str(cb_message))
+			await client.send_message(message.channel, str(answer))
 
 		if message.content.lower().startswith('!away-set'):
 			await bot.away_fnc(client, message, 'set')
@@ -82,6 +98,15 @@ async def on_message(message):
 		if message.content.lower().startswith('!clear'):
 			await bot.clear(client, message)
 
+		if message.content.lower().startswith('!displayname '):
+			await bot.displayname(client, message, 'self')
+
+		if message.content.lower().startswith('!displayname-send'):
+			await bot.displayname(client, message, 'send')
+
+		if message.content.lower().startswith('!displayname-set '):
+			await bot.displayname(client, message, 'set')
+
 		if message.content.lower() == '!events':
 			await bot.file_interface(client, message, 'events', 'read')
 
@@ -97,8 +122,11 @@ async def on_message(message):
 		if message.content.lower().startswith('!group-enroll'):
 			await bot.group(client, message, 'enroll')
 
-		if message.content.lower().startswith('!group-add'):
+		if message.content.lower().startswith('!group-add '):
 			await bot.group(client, message, 'add')
+
+		if message.content.lower().startswith('!group-add_id'):
+			await bot.group(client, message, 'add_id')
 
 		if message.content.lower().startswith('!group-open'):
 			await bot.group(client, message, 'open')
@@ -109,7 +137,10 @@ async def on_message(message):
 		if message.content.lower().startswith('!group-call'):
 			await bot.group(client, message, 'call')
 
-		if message.content.lower().startswith('!group-remove'):
+		if message.content.lower().startswith('!group-remove '):
+			await bot.group(client, message, 'remove')
+
+		if message.content.lower().startswith('!group-remove_id '):
 			await bot.group(client, message, 'remove')
 
 		if message.content.lower().startswith('!group-unenroll'):
@@ -258,6 +289,12 @@ async def on_message(message):
 
 		if message.content.lower().startswith('!roll'):
 			await bot.roll_dice(client, message)
+
+		if message.content.lower() == '!whatismyid':
+			await bot.id_fnc(client, message, 'self')
+
+		if message.content.lower().startswith('!checkid'):
+			await bot.id_fnc(client, message, 'other')
 		
 		if message.content.lower().startswith('!wiki'):
 			await bot.wiki(client, message)
