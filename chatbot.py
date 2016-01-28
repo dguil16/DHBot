@@ -261,6 +261,24 @@ class Chatbot(object):
 				else:
 					await client.send_message(message.channel, "Please ensure that you include the 4 digits at the end of your display name.")
 
+		if query == 'send':
+			serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+			x = open('display_names.txt', 'r')
+			display_names = json.load(x)
+			x.close()
+			member_list = ''
+			for x in serv.members:
+				if self.check_role(client, x, "Member") == True:
+					if x.id in display_names:
+						member_list += '{}, {}, {}\r\n'.format(x.name, x.id, display_names[x.id])
+					else:
+						member_list += '{}, {}, N/A\r\n'.format(x.name, x.id)
+			x = open ('discord_roster.txt', 'w')
+			x.write(member_list)
+			x.close()
+			await client.send_file(message.author, 'discord_roster.txt')
+
+
 		if query == 'set':
 			if self.check_role(client, message, 'Admin') == True:
 				discord_id = message.content.partition(' ')[2].partition('; ')[0]
@@ -617,3 +635,20 @@ class Chatbot(object):
 	async def wiki(self, client, message):
 		search = message.content.partition(' ')[2].replace(' ', '_')
 		await client.send_message(message.channel, 'http://wiki.guildwars2.com/wiki/Special:Search/'+search)
+
+	async def groupupdate(self, client, message):
+		if message.author.id != '77165970824630272':
+			pass
+		else:
+			serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+			with open('groups.txt', 'r') as f:
+				all_groups = json.load(f)
+			new_member_list = []
+			for x in all_groups:
+				for y in all_groups[x]["members"]:
+					member = discord.utils.find(lambda m: m.name == y, serv.members)
+					new_member_list += [member.id]
+				all_groups[x]["members"] = new_member_list
+			with open('groups.txt', 'w') as f:
+				f.write(str(json.dumps(all_groups)))
+			await client.send_message(message.channel, "The group list has been updated.")

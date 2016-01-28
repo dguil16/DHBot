@@ -56,7 +56,7 @@ async def on_member_update(before, after):
 			disp_names = json.load(x)
 			x.close()
 			if after.id not in disp_names:
-				await client.send_message(after, "Your GW2 Display Name is not listed in our database. Please enter `!displayname <GW2 Display name>` in Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
+				await client.send_message(after, "Your GW2 Display Name is not listed in our database. Please enter `!displayname <GW2 Display name>` (without <>) in Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
 
 	if str(before.status) == 'offline' and str(after.status) == 'online' and after.name == "Scottzilla":
 		await client.send_message(after, ":boom: Happy birthday! :boom:")
@@ -66,11 +66,9 @@ async def on_message(message):
 
 #	if message.content.lower().startswith('!test'):
 #		await client.send_message(message.channel, "Test successful.")
-	if message.content.startswith('!status'):
-		user_name = message.content.partition(' ')[2]
-		serv = discord.utils.find(lambda m: m.name == "Xorin Testing", client.servers)
-		user = discord.utils.find(lambda m: m.name == user_name, serv.members)
-		await client.send_message(message.channel, user.status)
+
+	if message.content == "!groupupdate":
+		await bot.groupupdate(client, message)
 
 	if bot.check_role(client, message, 'BotBan') == False:
 
@@ -102,6 +100,9 @@ async def on_message(message):
 
 		if message.content.lower().startswith('!displayname '):
 			await bot.displayname(client, message, 'self')
+
+		if message.content.lower().startswith('!displayname-send'):
+			await bot.displayname(client, message, 'send')
 
 		if message.content.lower().startswith('!displayname-set '):
 			await bot.displayname(client, message, 'set')
