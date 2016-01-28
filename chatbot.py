@@ -643,8 +643,8 @@ class Chatbot(object):
 			serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
 			with open('groups.txt', 'r') as f:
 				all_groups = json.load(f)
-			new_member_list = []
 			for x in all_groups:
+				new_member_list = []
 				for y in all_groups[x]["members"]:
 					member = discord.utils.find(lambda m: m.name == y, serv.members)
 					new_member_list += [member.id]
