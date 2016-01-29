@@ -256,7 +256,7 @@ class Chatbot(object):
 			else:
 				error_check = message.content.partition(' ')[2].partition('.')
 				if len(error_check[2]) == 4:
-					disp_names[message.author.id] = message.content.partition(' ')[2]
+					disp_names[message.author.id] = {"display name": message.content.partition(' ')[2], "verified": "n"}
 					await client.send_message(message.channel, "Your display name has been entered as {}. If you made an error, please contact an Admin.".format(message.content.partition(' ')[2]))
 				else:
 					await client.send_message(message.channel, "Please ensure that you include the 4 digits at the end of your display name.")
@@ -270,9 +270,9 @@ class Chatbot(object):
 			for x in serv.members:
 				if self.check_role(client, x, "Member") == True:
 					if x.id in display_names:
-						member_list += '{}, {}, {}\r\n'.format(x.name, x.id, display_names[x.id])
+						member_list += '{}, {}, {}, {}\r\n'.format(x.name, x.id, display_names[x.id]["display name"], display_names[x.id]["verified"])
 					else:
-						member_list += '{}, {}, N/A\r\n'.format(x.name, x.id)
+						member_list += '{}, {}, N/A, n\r\n'.format(x.name, x.id)
 			x = open ('discord_roster.txt', 'w')
 			x.write(member_list)
 			x.close()
@@ -288,10 +288,10 @@ class Chatbot(object):
 					serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
 					member = discord.utils.find(lambda m: m.id == discord_id, serv.members)
 					if member.id in disp_names:
-						old_name = disp_names[member.id]
+						old_name = disp_names[member.id]["display name"]
 					else:
 						old_name = "N/A"
-					disp_names[member.id] = disp_name
+					disp_names[member.id] = {"display name": disp_name, "verified": "y"}
 					await client.send_message(message.channel, "{} has changed {}'s display name from {} to {}.".format(message.author, member.name, old_name, disp_name))
 				else:
 					await client.send_message(message.channel, "Please ensure that you include the 4 digits at the end of your display name.")
