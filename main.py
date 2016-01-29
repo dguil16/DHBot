@@ -67,9 +67,6 @@ async def on_message(message):
 #	if message.content.lower().startswith('!test'):
 #		await client.send_message(message.channel, "Test successful.")
 
-	if message.content == "!groupupdate":
-		await bot.groupupdate(client, message)
-
 	if bot.check_role(client, message, 'BotBan') == False:
 
 		if message.content.startswith('{}'.format(client.user.mention)):
