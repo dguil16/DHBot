@@ -47,7 +47,7 @@ async def on_member_join(newmember):
 	for x in admin_users:
 		admin_mentions += " " + (x.mention)
 	await client.send_message(notification_channel, newmember.name + ' needs permissions. ' + admin_mentions)
-	await client.send_message(newmember, 'Welcome to our Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text-chat and Public voice channels. If your Discord username is different from your in game GW2 name, please post in the lobby what your account name is so we can properly identify you. Please be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or, once you have permissions, by posting in the botbeta channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or Guild chat for assistance.')
+	await client.send_message(newmember, 'Welcome to the Descendants of Honor Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text-chat and Public voice channels. If you are a member of the DH Guild Wars 2 guild or are considering becoming one, please take a moment to let us know your GW2 Display Name by sending the following message in this chat:\n`!display name <GW2 Display Name>`\nPlease note that you do not need to enter <>. For example:\n`!displayname Xantha.1234`\nPlease be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or by posting in a text channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or guild chat for assistance. If you encounter any problems with the bot, please contact Xorin.')
 
 @client.event
 async def on_member_update(before, after):
@@ -56,7 +56,7 @@ async def on_member_update(before, after):
 			disp_names = json.load(x)
 			x.close()
 			if after.id not in disp_names:
-				await client.send_message(after, "Your GW2 Display Name is not listed in our database. Please enter `!displayname <GW2 Display name>` (without <>) in Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
+				await client.send_message(after, "My name is Xantha, the DH Discord bot. According to my records, your GW2 Display Name is not listed in our database. Please enter `\n!displayname <GW2 Display name>`\n without the <>, for example \n`!displayname Xorin.9260`\nin Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
 
 	if str(before.status) == 'offline' and str(after.status) == 'online' and after.name == "Scottzilla":
 		await client.send_message(after, ":boom: Happy birthday! :boom:")
