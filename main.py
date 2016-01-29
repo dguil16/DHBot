@@ -56,7 +56,7 @@ async def on_member_update(before, after):
 			disp_names = json.load(x)
 			x.close()
 			if after.id not in disp_names:
-				await client.send_message(after, "My name is Xantha, the DH Discord bot. According to my records, your GW2 Display Name is not listed in our database. Please enter `\n!displayname <GW2 Display name>`\n without the <>, for example \n`!displayname Xorin.9260`\nin Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
+				await client.send_message(after, "My name is Xantha, the DH Discord bot. According to my records, your GW2 Display Name is not listed in our database. Please enter \n`!displayname <GW2 Display name>`\n without the <>, for example \n`!displayname Xantha.1234`\nin Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
 
 	if str(before.status) == 'offline' and str(after.status) == 'online' and after.name == "Scottzilla":
 		await client.send_message(after, ":boom: Happy birthday! :boom:")
