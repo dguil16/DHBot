@@ -16,8 +16,6 @@ from polls import Poll
 from reminder import Reminder
 from trivia import Trivia
 
-
-
 # Set up the logging module to output diagnostic to the console.
 logging.basicConfig()
 
@@ -74,24 +72,27 @@ async def on_message(message):
 			answer = clever_bot.Ask(str(cb_message))
 			await client.send_message(message.channel, str(answer))
 
-		if message.content.lower().startswith('!away-set'):
-			await bot.away_fnc(client, message, 'set')
+		if message.content.lower() == '!adminhelp':
+			await bot.help(client, message, 'admin')
+
+		if message.content.lower().startswith('!adminhelp-add'):
+			await bot.help(client, message, 'add-admin')
+
+		if message.content.lower().startswith('!adminhelp-delete'):
+			await bot.help(client, message, 'delete-admin')
 
 		if message.content.lower().startswith('!away-return'):
 			await bot.away_fnc(client, message, 'return')
 
+		if message.content.lower().startswith('!away-set'):
+			await bot.away_fnc(client, message, 'set')
+
 		if message.content.lower().startswith('!away-whois'):
 			await bot.away_fnc(client, message, 'whois')
 
-		if message.content.lower() == '!help':
-			await bot.help(client, message, 'read')
-
-		if message.content.lower() == '!adminhelp':
-			await bot.help(client, message, 'admin')
-
-		if message.content.lower().startswith('!help '):
-			await bot.help(client, message, 'info')
-	
+		if message.content.lower().startswith('!checkid'):
+			await bot.id_fnc(client, message, 'other')
+		
 		if message.content.lower().startswith('!clear'):
 			await bot.clear(client, message)
 
@@ -122,9 +123,6 @@ async def on_message(message):
 		if message.content.lower().startswith('!group-add '):
 			await bot.group(client, message, 'add')
 
-		if message.content.lower().startswith('!group-add_id'):
-			await bot.group(client, message, 'add_id')
-
 		if message.content.lower().startswith('!group-open'):
 			await bot.group(client, message, 'open')
 
@@ -134,11 +132,14 @@ async def on_message(message):
 		if message.content.lower().startswith('!group-call'):
 			await bot.group(client, message, 'call')
 
+		if message.content.lower().startswith('!group-mine'):
+			await bot.group(client, message, 'mine')
+
 		if message.content.lower().startswith('!group-remove '):
 			await bot.group(client, message, 'remove')
 
-		if message.content.lower().startswith('!group-remove_id '):
-			await bot.group(client, message, 'remove')
+		if message.content.lower().startswith('!group-remove_all '):
+			await bot.group(client, message, 'remove all')
 
 		if message.content.lower().startswith('!group-unenroll'):
 			await bot.group(client, message, 'unenroll')
@@ -155,92 +156,53 @@ async def on_message(message):
 		if message.content.lower().startswith('!hello'):
 			await bot.greet(client, message)
 
+		if message.content.lower() == '!help':
+			await bot.help(client, message, 'read')
+
+		if message.content.lower().startswith('!help '):
+			await bot.help(client, message, 'info')
+
 		if message.content.lower().startswith('!help-edit'):
 			await bot.help(client, message, 'edit')
 
 		if message.content.lower().startswith('!help-add'):
 			await bot.help(client, message, 'add')
 
-		if message.content.lower().startswith('!adminhelp-add'):
-			await bot.help(client, message, 'add-admin')
-
 		if message.content.lower().startswith('!help-delete'):
 			await bot.help(client, message, 'delete')
 
-		if message.content.lower().startswith('!adminhelp-delete'):
-			await bot.help(client, message, 'delete-admin')
-		
 		if message.content.lower().startswith('!lmgtfy'):
 			await bot.lmgtfy(client, message)
 
 		if message.content.lower().startswith('!mission'):
 			await bot.mission(client, message)
 
-		if message.content.lower().startswith('!poll-create'):
-			await poll_module.poll_fnc(client, message, 'create')
-
-		if message.content.lower().startswith('!anonpoll-create'):
-			await poll_module.poll_fnc(client, message, 'create anon')
-
-		if message.content.lower().startswith('!multipoll-create'):
-			await poll_module.poll_fnc(client, message, 'create multi')
-
-		if message.content.lower().startswith('!poll-open'):
-			await poll_module.poll_fnc(client, message, 'open')
-
 		if message.content.lower().startswith('!poll-close'):
 			await poll_module.poll_fnc(client, message, 'close')
 
-		if message.content.lower().startswith('!poll-info'):
-			await poll_module.poll_fnc(client, message, 'info')
+		if message.content.lower().startswith('!poll-create '):
+			await poll_module.poll_fnc(client, message, 'create')
+
+		if message.content.lower().startswith('!poll-create_anon'):
+			await poll_module.poll_fnc(client, message, 'create anon')
+
+		if message.content.lower().startswith('!poll-create_multi'):
+			await poll_module.poll_fnc(client, message, 'create multi')
 
 		if message.content.lower().startswith('!poll-delete'):
 			await poll_module.poll_fnc(client, message, 'delete')
 
-		if message.content.lower().startswith('!vote '):
-			await poll_module.poll_fnc(client, message, 'vote')
-
-		if message.content.lower().startswith('!vote-remove'):
-			await poll_module.poll_fnc(client, message, 'vote remove')
-
-		if message.content.lower().startswith('!vote-change'):
-			await poll_module.poll_fnc(client, message, 'change')
-
-		if message.content.lower().startswith('!admin-vote'):
-			await poll_module.poll_fnc(client, message, 'admin')
+		if message.content.lower().startswith('!poll-info'):
+			await poll_module.poll_fnc(client, message, 'info')
 
 		if message.content.lower().startswith('!poll-list'):
 			await poll_module.poll_fnc(client, message, 'list')
 
+		if message.content.lower().startswith('!poll-open'):
+			await poll_module.poll_fnc(client, message, 'open')
+
 		if message.content.lower().startswith('!poll-results'):
 			await poll_module.poll_fnc(client, message, 'results')
-
-		if message.content.lower().startswith('!survey-create'):
-			await poll_module.survey_fnc(client, message, 'create')
-
-		if message.content.lower().startswith('!survey-open'):
-			await poll_module.survey_fnc(client, message, 'open')
-
-		if message.content.lower().startswith('!survey-close'):
-			await poll_module.survey_fnc(client, message, 'close')
-
-		if message.content.lower().startswith('!survey-info'):
-			await poll_module.survey_fnc(client, message, 'info')
-
-		if message.content.lower().startswith('!survey-delete'):
-			await poll_module.survey_fnc(client, message, 'delete')
-
-		if message.content.lower().startswith('!survey-submit'):
-			await poll_module.survey_fnc(client, message, 'submit')
-
-		if message.content.lower().startswith('!survey-change'):
-			await poll_module.survey_fnc(client, message, 'change')
-
-		if message.content.lower().startswith('!survey-list'):
-			await poll_module.survey_fnc(client, message, 'list')
-
-		if message.content.lower().startswith('!survey-results'):
-			await poll_module.survey_fnc(client, message, 'results')
 
 		if message.content.lower().startswith('!price'):
 			await bot.price(client, message)
@@ -248,11 +210,17 @@ async def on_message(message):
 		if message.content.lower().startswith('!purge'):
 			await bot.purge(client, message)
 
+		if message.content.lower().startswith('!quit'):
+			await bot.stop_bot(client, message)
+
 		if message.content.lower().startswith('!remindme'):
 			await remind_module.run(client, message)
 
 		#if message.content.lower().startswith('!reminder'):
 		#	await remind_module.run(client, message, 'public')
+
+		if message.content.lower().startswith('!roll'):
+			await bot.roll_dice(client, message)
 
 		if message.content.lower().startswith('!roster-copy'):
 			await bot.roster_fnc(client, message, 'copy')
@@ -269,8 +237,32 @@ async def on_message(message):
 		if message.content.lower().startswith('!roster-sendpromotion'):
 			await bot.roster_fnc(client, message, 'send promotion')
 
-		if message.content.lower().startswith('!timetohot'):
-			await bot.time_to_hot(client, message)
+		if message.content.lower().startswith('!survey-change'):
+			await poll_module.survey_fnc(client, message, 'change')
+
+		if message.content.lower().startswith('!survey-close'):
+			await poll_module.survey_fnc(client, message, 'close')
+
+		if message.content.lower().startswith('!survey-create'):
+			await poll_module.survey_fnc(client, message, 'create')
+
+		if message.content.lower().startswith('!survey-delete'):
+			await poll_module.survey_fnc(client, message, 'delete')
+
+		if message.content.lower().startswith('!survey-info'):
+			await poll_module.survey_fnc(client, message, 'info')
+
+		if message.content.lower().startswith('!survey-list'):
+			await poll_module.survey_fnc(client, message, 'list')
+
+		if message.content.lower().startswith('!survey-open'):
+			await poll_module.survey_fnc(client, message, 'open')
+
+		if message.content.lower().startswith('!survey-results'):
+			await poll_module.survey_fnc(client, message, 'results')
+
+		if message.content.lower().startswith('!survey-submit'):
+			await poll_module.survey_fnc(client, message, 'submit')
 
 		if message.content.lower().startswith('!timetomissions'):
 			await bot.time_to_missions(client, message)
@@ -281,18 +273,21 @@ async def on_message(message):
 		if message.content.lower().startswith('!timetowvwreset'):
 			await bot.time_to_wvw_reset(client, message)
 
-		if message.content.lower().startswith('!quit'):
-			await bot.stop_bot(client, message)
+		if message.content.lower().startswith('!vote '):
+			await poll_module.poll_fnc(client, message, 'vote')
 
-		if message.content.lower().startswith('!roll'):
-			await bot.roll_dice(client, message)
+		if message.content.lower().startswith('!vote-admin'):
+			await poll_module.poll_fnc(client, message, 'admin')
+
+		if message.content.lower().startswith('!vote-change'):
+			await poll_module.poll_fnc(client, message, 'change')
+
+		if message.content.lower().startswith('!vote-remove'):
+			await poll_module.poll_fnc(client, message, 'vote remove')
 
 		if message.content.lower() == '!whatismyid':
 			await bot.id_fnc(client, message, 'self')
 
-		if message.content.lower().startswith('!checkid'):
-			await bot.id_fnc(client, message, 'other')
-		
 		if message.content.lower().startswith('!wiki'):
 			await bot.wiki(client, message)
 
