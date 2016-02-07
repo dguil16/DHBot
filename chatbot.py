@@ -86,7 +86,7 @@ class Chatbot(object):
 				f = open(self.away_list, 'w')
 				f.write(str(json.dumps(away)))
 				f.close()
-				
+
 		if query == 'set':
 			try:
 				away_data = message.content.partition(' ')[2]
@@ -104,7 +104,7 @@ class Chatbot(object):
 				await client.send_message(message.channel, 'You have been set away for ' +str(duration) + ' days.')
 
 		if query == 'whois':
-			if self.check_role(client, message, 'Admin') == False and self.check_role(client, message, 'Leadership') == False:
+			if self.check_role(client, message, 'Leadership') == False:
 				await client.send_message(message.channel, "You do not have permission to view the away list.")
 			else:
 				with open(self.away_list, 'r') as f:
@@ -195,7 +195,6 @@ class Chatbot(object):
 			x.close()
 			await client.send_file(message.author, 'discord_roster.txt')
 
-
 		if query == 'set':
 			if self.check_role(client, message, 'Admin') == True:
 				discord_id = message.content.partition(' ')[2].partition('; ')[0]
@@ -230,7 +229,7 @@ class Chatbot(object):
 			await client.send_message(message.channel, text_file.read())
 			text_file.close()
 		elif query == 'write':
-			if self.check_role(client, message, 'Admin') == True:
+			if self.check_role(client, message, 'Leadership') == True:
 				text_file = open(location, 'w')
 				new_text = message.content.partition(' ')[2]
 				text_file.write(new_text)
@@ -316,7 +315,7 @@ class Chatbot(object):
 					await client.send_message(message.channel, "{} has called the group {}:\n{}".format(message.author, all_groups[group_name]["name"], mention_list))
 
 			if query == 'close':
-				if self.check_role(client, message, 'Admin') == False:
+				if self.check_role(client, message, 'Leadership') == False:
 					client.send_message(message.channel, 'You do not have permission to do that.')
 				else:
 					group_name = message.content.partition(' ')[2].lower()
@@ -399,7 +398,7 @@ class Chatbot(object):
 				await client.send_message(message.channel, "These are the groups {} is currently a member of:\n{}".format(message.author, group_list))
 
 			if query == 'open':
-				if self.check_role(client, message, 'Admin') == False:
+				if self.check_role(client, message, 'Leadership') == False:
 					client.send_message(message.channel, 'You do not have permission to do that.')
 				else:
 					group_name = message.content.partition(' ')[2].lower()

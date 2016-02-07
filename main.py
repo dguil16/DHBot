@@ -214,10 +214,13 @@ async def on_message(message):
 			await bot.stop_bot(client, message)
 
 		if message.content.lower().startswith('!remindme'):
-			await remind_module.run(client, message)
+			await remind_module.run(client, message, bot, 'self')
 
-		#if message.content.lower().startswith('!reminder'):
-		#	await remind_module.run(client, message, 'public')
+		if message.content.lower().startswith('!reminder'):
+			await remind_module.run(client, message, bot, 'channel')
+
+		if message.content.lower().startswith('!remind-group'):
+			await remind_module.run(client, message, bot, 'group')
 
 		if message.content.lower().startswith('!roll'):
 			await bot.roll_dice(client, message)
