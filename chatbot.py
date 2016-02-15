@@ -1,6 +1,7 @@
 import datetime
 from datetime import datetime
 import json
+import os
 import requests
 import time
 
@@ -26,13 +27,10 @@ class Chatbot(object):
 	async def _weekly_event(self, event_day, event_hour, event_minute):
 		"""
 		This function computes the timedelta for events that occur weekly.
-
 		event_day is an integer between 0 and 6, where 0 is monday and 6 is sunday.
 		event_hour is an integer between 0 and 23
 		event_minute is an integer between 0 and 59
-
 		Provide these times in UTC
-
 		event_time is a datetime object. The day is initially set to be the same as the current day.
 		This value is then altered based on a comparison with event_day, due to the lack of 
 		support for days of the week.
@@ -541,11 +539,29 @@ class Chatbot(object):
 		search = message.content.partition(' ')[2].replace(' ','+')
 		await client.send_message(message.channel, 'http://lmgtfy.com/?q='+search)
 
-	async def mission(self, client, message):
-		mission = message.content.partition(' ' )[2]
-		with open('mission.txt', 'r') as f:
-			mission_data = json.load(f)
-		await client.send_message(message.channel, mission_data[mission])	
+	async def mission(self, client, message, query):
+		try:
+			with open('mission.txt', 'r') as f:
+				mission_data = json.load(f)
+		except:
+			mission_data = {}
+
+		if query == 'info':
+			mission = message.content.lower().partition(' ' )[2]
+			mission_list = []
+			for x in mission_data:
+				mission_list += [str(x).lower()]
+				if str(x).lower() == mission:
+					await client.send_message(message.channel, mission_data[x])
+			if mission not in mission_list:
+				await client.send_message(message.channel, 'There is no mission with that name.')
+
+		if query == 'list':
+			mission_list = ''
+			for x in sorted(mission_data):
+				mission_list += '{}, '.format(x)
+			mission_list[:-2]
+			await client.send_message(message.channel, 'The following is a list of missions with availalble information:\n{}'.format(mission_list))
 
 	async def price(self, client, message):
 		try:
@@ -595,16 +611,6 @@ class Chatbot(object):
 		if self.check_role(client, message, 'Leadership') == False:
 			await client.send_message(message.channel, 'You do not have permission to use the roster functions.')
 
-		elif query == 'copy':
-			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
-			full_roster = json.loads(response.text)
-			json_roster = {}
-			for x in full_roster:
-				json_roster[x["name"]] = {"rank": x["rank"], "joined": x["joined"]}
-			with open('jsonroster.txt', 'w') as g:
-				g.write(str(json.dumps(json_roster)))
-			await client.send_message(message.channel, 'Roster successfully created.')
-
 		elif query == 'format':
 			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
 			full_roster = json.loads(response.text)
@@ -614,13 +620,17 @@ class Chatbot(object):
 				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": x["joined"]}
 			for y in sorted(json_roster):
 				formatted_roster += y + ', ' + json_roster[y]["rank"] + ', ' + str(json_roster[y]["joined"]) + '\r\n'
-			with open('formattedroster.txt', 'w') as g:
+			with open('formatted_roster.txt', 'w') as g:
 				g.write(formatted_roster)
-			await client.send_message(message.channel, 'Roster successfully created.')
+			await client.send_message(message.author, 'Here is the updated copy of the guild roster.')
+			await client.send_file(message.author, 'formatted_roster.txt')
 
 		elif query == 'promotion':
-			with open('jsonroster.txt', 'r') as f:
-				json_roster = json.load(f)
+			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
+			full_roster = json.loads(response.text)
+			json_roster = {}
+			for x in full_roster:
+				json_roster[x["name"]] = {"rank": x["rank"], "joined": x["joined"]}
 			app_squire_list = {}
 			promotion_list = {}
 			formatted_promotion = ''
@@ -648,14 +658,17 @@ class Chatbot(object):
 				formatted_promotion += x + ', ' + promotion_list[x]["rank"] + ', ' + str(promotion_list[x]["joined"].partition('T')[0]) + ', ' + str(promotion_list[x]["days passed"]) + '\r\n'
 			with open('promotion_list.txt', 'w') as f:
 				f.write(formatted_promotion)
-			await client.send_message(message.channel, 'The list of potential promotionss based on join date has been updated.')
+			await client.send_message(message.author, 'Here is the updated copy of the promotion list.')
+			await client.send_file(message.author, 'promotion_list.txt')
 
 		elif query == 'send':
-			await client.send_message(message.author, 'Here is the requested file:')
-			await client.send_file(message.author, 'formattedroster.txt')
+			raw_time = os.path.getmtime('formatted_roster.txt')
+			mod_time = datetime.fromtimestamp(raw_time)
+			await client.send_message(message.author, 'Here is the most recent roster, generated on {}. If you need a more up-to-date copy, please use !roster-formattedcopy.'.format(mod_time))
+			await client.send_file(message.author, 'formatted_roster.txt')
 
 		elif query == 'send promotion':
-			await client.send_message(message.author, 'Here is the requested file:')
+			await client.send_message(message.author, 'Here is the most recent list of potential promotions, generated on {}. If you need a more up-to-date copy, please use !roster-promotion.'.format(datetime.fromtimestamp(os.path.getmtime('promotion_list.txt'))))
 			await client.send_file(message.author, 'promotion_list.txt')
 
 
