@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import asyncio
+import datetime
+from datetime import datetime
 import json
 import os
 import sys
@@ -174,8 +176,20 @@ async def on_message(message):
 		if message.content.lower().startswith('!lmgtfy'):
 			await bot.lmgtfy(client, message)
 
-		if message.content.lower().startswith('!mission'):
-			await bot.mission(client, message)
+		if message.content.lower().startswith('!mission '):
+			await bot.mission(client, message, 'info')
+
+		if message.content.lower().startswith('!mission-add'):
+			await bot.mission(client, message, 'add')
+
+		if message.content.lower().startswith('!mission-edit'):
+			await bot.mission(client, message, 'edit')
+
+		if message.content.lower().startswith('!mission-delete'):
+			await bot.mission(client, message, 'delete')
+
+		if message.content.lower().startswith('!mission-list'):
+			await bot.mission(client, message, 'list')
 
 		if message.content.lower().startswith('!poll-close'):
 			await poll_module.poll_fnc(client, message, 'close')
@@ -214,19 +228,19 @@ async def on_message(message):
 			await bot.stop_bot(client, message)
 
 		if message.content.lower().startswith('!remindme'):
-			await remind_module.run(client, message)
+			await remind_module.run(client, message, bot, 'self')
 
-		#if message.content.lower().startswith('!reminder'):
-		#	await remind_module.run(client, message, 'public')
+		if message.content.lower().startswith('!reminder'):
+			await remind_module.run(client, message, bot, 'channel')
+
+		if message.content.lower().startswith('!remind-group'):
+			await remind_module.run(client, message, bot, 'group')
 
 		if message.content.lower().startswith('!roll'):
 			await bot.roll_dice(client, message)
 
 		if message.content.lower().startswith('!roster-copy'):
 			await bot.roster_fnc(client, message, 'copy')
-
-		if message.content.lower().startswith('!roster-formattedcopy'):
-			await bot.roster_fnc(client, message, 'format')
 
 		if message.content.lower().startswith('!roster-promotion'):
 			await bot.roster_fnc(client, message, 'promotion')
