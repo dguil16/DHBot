@@ -179,11 +179,14 @@ async def on_message(message):
 		if message.content.lower().startswith('!mission '):
 			await bot.mission(client, message, 'info')
 
-#		if message.content.lower().startswith('!mission-edit'):
-#			await bot.mission(client, message, 'edit')
+		if message.content.lower().startswith('!mission-add'):
+			await bot.mission(client, message, 'add')
 
-#		if message.content.lower().startswith('!mission-delete'):
-#			await bot.mission(client, message, 'delete')
+		if message.content.lower().startswith('!mission-edit'):
+			await bot.mission(client, message, 'edit')
+
+		if message.content.lower().startswith('!mission-delete'):
+			await bot.mission(client, message, 'delete')
 
 		if message.content.lower().startswith('!mission-list'):
 			await bot.mission(client, message, 'list')

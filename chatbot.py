@@ -545,10 +545,51 @@ class Chatbot(object):
 				mission_data = json.load(f)
 		except:
 			mission_data = {}
+		mission_list = []
+
+		if query == 'add' and self.check_role(client, message, "Leadership") == True:
+			try:
+				mission_name = message.content.partition(' ')[2].partition('; ')[0]
+				for x in mission_data:
+					mission_list += [str(x).lower()]
+				if mission_name.lower() in mission_list:
+					await client.send_message(message.channel, "There is already a mission entry with that name.")
+				else:
+					mission_details = message.content.partition(' ')[2].partition('; ')[2]
+					mission_data[mission_name] = mission_details
+					await client.send_message(message.channel, "{} has created the mission entry for {}.".format(message.author.name, mission_name))
+			except:
+				await client.send_message(message.channel, "There was an error processing your request.")
+
+		if query == 'delete' and self.check_role(client, message, "Leadership") == True:
+			try:
+				mission_name = message.content.partition(' ')[2].lower()
+				for x in mission_data:
+					mission_list += [str(x).lower()]
+					if str(x).lower() == mission_name:
+						del mission_data[mission_name]
+						await client.send_message(message.channel, "{} has removed the mission entry {}.".format(message.author.name, mission_name))
+				if mission_name not in mission_list:
+					await client.send_message(message.channel, "There is no mission with that name.")
+			except:
+				await client.send_message(message.channel, "There was an error processing your request.")
+
+		if query == 'edit' and self.check_role(client, message, "Leadership") == True:
+			try:
+				mission_name = message.content.partition(' ')[2].partition('; ')[0].lower()
+				for x in mission_data:
+					mission_list += [str(x).lower()]
+					if mission_name == str(x).lower():
+						mission_details = message.content.partition(' ')[2].partition('; ')[2]
+						mission_data[x] = mission_details
+						await client.send_message(message.channel, "{} has edited the mission entry for {}.".format(message.author.name, x))
+				if mission_name not in mission_list:
+					await client.send_message(message.channel, "There is no mission entry with that name. Please use `!mission-add <name>; <description>`")
+			except:
+				await client.send_message(message.channel, "There was an error processing your request.")
 
 		if query == 'info':
 			mission = message.content.lower().partition(' ' )[2]
-			mission_list = []
 			for x in mission_data:
 				mission_list += [str(x).lower()]
 				if str(x).lower() == mission:
@@ -560,8 +601,12 @@ class Chatbot(object):
 			mission_list = ''
 			for x in sorted(mission_data):
 				mission_list += '{}, '.format(x)
-			mission_list[:-2]
+			mission_list = mission_list[:-2]
 			await client.send_message(message.channel, 'The following is a list of missions with availalble information:\n{}'.format(mission_list))
+
+		if query == 'add' or query == 'delete' or query =='edit':
+			with open("mission.txt", 'w') as f:
+				f.write(str(json.dumps(mission_data)))
 
 	async def price(self, client, message):
 		try:
