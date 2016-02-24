@@ -248,6 +248,9 @@ async def on_message(message):
 		if message.content.lower() == '!roster-send':
 			await bot.roster_fnc(client, message, 'send')
 
+		if message.content.lower().startswith('!roster-send '):
+			await bot.roster_fnc(client, message, 'send specified')
+
 		if message.content.lower().startswith('!roster-sendpromotion'):
 			await bot.roster_fnc(client, message, 'send promotion')
 
