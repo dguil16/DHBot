@@ -39,9 +39,12 @@ server_list = []
 @client.event
 async def on_member_join(newmember):
 	admin_users = []
+	leadership_names = []
 	for x in newmember.server.members:
 		if bot.check_role(client, x, 'Admin') == True:
 			admin_users += [x]
+		if bot.check_role(client, x, 'Leadership') == True:
+			leadership_names += [x.name]
 	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', newmember.server.channels)
 	admin_mentions = ''
 	for x in admin_users:
@@ -49,14 +52,30 @@ async def on_member_join(newmember):
 	await client.send_message(notification_channel, newmember.name + ' needs permissions. ' + admin_mentions)
 	await client.send_message(newmember, 'Welcome to the Descendants of Honor Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text-chat and Public voice channels. If you are a member of the DH Guild Wars 2 guild or are considering becoming one, please take a moment to let us know your GW2 Display Name by sending the following message in this chat:\n`!display name <GW2 Display Name>`\nPlease note that you do not need to enter <>. For example:\n`!displayname Xantha.1234`\nPlease be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or by posting in a text channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or guild chat for assistance. If you encounter any problems with the bot, please contact Xorin.')
 
+	if newmember.name in leadership_names:
+		await client.send_message(newmember, "I have noticed that your name matches the name of one of our members of leadership. Please take a moment to go to your Discord settings (the cog on the lower left of the client) and change your username. If you need assistance with this, please ask. Failure to make this change may result in your Discord permissions being revoked.")
+		await client.send_message(notification_channel, "The new member with user ID {} currently has the same name as {}. They have been asked to change their name.".format(newmember.id, newmember.name))
+
 @client.event
 async def on_member_update(before, after):
+	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', after.server.channels)
 	if str(before.status) == 'offline' and str(after.status) == 'online' and bot.check_role(client, after, "Member") == True:
 			x = open("display_names.txt", 'r')
 			disp_names = json.load(x)
 			x.close()
 			if after.id not in disp_names:
 				await client.send_message(after, "My name is Xantha, the DH Discord bot. According to my records, your GW2 Display Name is not listed in our database. Please enter \n`!displayname <GW2 Display name>`\n without the <>, for example \n`!displayname Xantha.1234`\nin Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
+
+	leadership_names = []
+	for x in after.server.members:
+		if bot.check_role(client, x, 'Leadership') == True:
+			leadership_names += [x.name]
+	if before.name not in leadership_names and after.name in leadership_names and bot.check_role(client, after, "Leadership") == False:
+		await client.send_message(after, "I have noticed that you have changed your name to the name of one of our members of leadership. Please take a moment to go to your Discord settings and change your username to something else. Failure to make this change may result in your Discord permissions being revoked.")
+		await client.send_message(notification_channel, "The member with user ID {} has changed their name from {} to {}. They have been asked to change their name.".format(after.id, before.name, after.name))
+	if before.name in leadership_names and after.name not in leadership_names and bot.check_role(client, after, "Leadership") == False:
+		await client.send_message(after, "Thank you for changing your username.")
+		await client.send_message(notification_channel, "The member with user ID {} has changed their name from {} to {}.".format(after.id, before.name, after.name))
 
 	if str(before.status) == 'offline' and str(after.status) == 'online' and after.name == "Scottzilla":
 		await client.send_message(after, ":boom: Happy birthday! :boom:")
@@ -247,6 +266,9 @@ async def on_message(message):
 
 		if message.content.lower() == '!roster-send':
 			await bot.roster_fnc(client, message, 'send')
+
+		if message.content.lower().startswith('!roster-send '):
+			await bot.roster_fnc(client, message, 'send specified')
 
 		if message.content.lower().startswith('!roster-sendpromotion'):
 			await bot.roster_fnc(client, message, 'send promotion')

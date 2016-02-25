@@ -183,11 +183,10 @@ class Chatbot(object):
 			x.close()
 			member_list = ''
 			for x in serv.members:
-				if self.check_role(client, x, "Member") == True:
-					if x.id in display_names:
-						member_list += '{}, {}, {}, {}\r\n'.format(x.name, x.id, display_names[x.id]["display name"], display_names[x.id]["verified"])
-					else:
-						member_list += '{}, {}, N/A, n\r\n'.format(x.name, x.id)
+				if x.id in display_names:
+					member_list += '{}, {}, {}, {}\r\n'.format(x.name, x.id, display_names[x.id]["display name"], display_names[x.id]["verified"])
+				else:
+					member_list += '{}, {}, N/A, n\r\n'.format(x.name, x.id)
 			x = open ('discord_roster.txt', 'w')
 			x.write(member_list)
 			x.close()
@@ -211,6 +210,14 @@ class Chatbot(object):
 					await client.send_message(message.channel, "Please ensure that you include the 4 digits at the end of your display name.")
 			else:
 				await client.send_message(message.channel, "You do not have permission to set display names.")
+
+		if query == 'verify' and self.check_role(client, message, "Admin") == True:
+			member_id = message.content.partition(' ')[2]
+			serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+			member = discord.utils.find(lambda m: m.id == discord_id, serv.members)
+			if member_id in disp_names:
+				disp_names[member_id]["verified"] = "yes"
+				await client.send_message(message.channel, "{} has verified {}'s Display Name.".format(message.author.name, member.name))
 
 		y = open("display_names.txt", 'w')
 		y.write(str(json.dumps(disp_names)))
@@ -252,49 +259,69 @@ class Chatbot(object):
 				if self.check_role(client, message, 'Leadership') == False:
 					await client.send_message(message.channel, 'You do not have permission to add members to this group.')
 				else:
-					already_in_list = ''
-					added_list = ''
-					removed_list = ''
-					not_in_list = ''
+					result_message = ''
+					not_a_member = ''
+					multiple_member = ''
+					member_list = []
 					group_info = message.content.partition(' ')[2].split('; ')
 					group_names = group_info[0].lower().split(', ')
+					member_names = group_info[1].split(', ')
 					serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
-					try:
-						member_query = int(group_info[1])
-						member = discord.utils.find(lambda m: m.id == str(member_query), serv.members)
-					except:
-						member_query = group_info[1]
-						if self.check_name(client, member_query) == "None":
-							await client.send_message(message.channel, "There is no member with the name {}.".format(member_query))
-						if self.check_name(client, member_query) == "Multi":
-							await client.send_message(message.channel, "There is more than one member with the name {}. Please use their Discord ID.".format(member_query))
-						if self.check_name(client, member_query) == "Unique":
-							member = discord.utils.find(lambda m: m.name == member_query, serv.members)
-					try:
-						if query == 'add':
-							for x in group_names:
-								if member.id in all_groups[x]["members"]:
-									already_in_list += '{}, '.format(all_groups[x]["name"])
+					for x in member_names:
+						try:
+							member_query = int(x)
+							member = discord.utils.find(lambda m: m.id == str(member_query), serv.members)
+							if member != None:
+								member_list += [member]
+							else:
+								not_a_member += '{}, '.format(x)
+						except:
+							member_query = x
+							if self.check_name(client, member_query) == "None":
+								not_a_member += '{}, '.format(x)
+							if self.check_name(client, member_query) == "Multi":
+								multiple_member += '{}, '.format(x)
+							if self.check_name(client, member_query) == "Unique":
+								member = discord.utils.find(lambda m: m.name == member_query, serv.members)
+								member_list += [member]
+					if not_a_member != '':
+						result_message += 'The following are not members of this Discord server: {}\n'.format(not_a_member[:-2])
+					if multiple_member != '':
+						result_message += 'There are multiple members with the following names. Please use IDs: {}\n'.format(multiple_member[:-2])
+					#try:
+					if query == 'add':
+						for x in group_names:
+							already_in_list = ''
+							added_list = ''
+							for y in member_list:
+								if y.id in all_groups[x]["members"]:
+									already_in_list += '{}, '.format(y.name)
 								else:
-									all_groups[x]["members"] += [member.id]
-									added_list += '{}, '.format(all_groups[x]["name"])
+									all_groups[x]["members"] += [y.id]
+									added_list += '{}, '.format(y.name)
 							if already_in_list != '':
-								await client.send_message(message.channel, '{} is already in the group(s): {}.'.format(member.name, already_in_list[:-2]))
+								result_message += 'The following members are already in the group {}: {}\n'.format(all_groups[x]["name"], already_in_list[:-2])
 							if added_list != '':
-								await client.send_message(message.channel, "{} has added {} to the group(s): {}.".format(message.author.name, member.name, added_list[:-2]))
-						if query == 'remove':
-							for x in group_names:
-								if member.id in all_groups[x]["members"]:
-									all_groups[x]["members"].remove(member.id)
-									removed_list += '{}, '.format(all_groups[x]["name"])
+								result_message += 'The following members were added to the group {}: {}\n'.format(all_groups[x]["name"], added_list[:-2])
+
+					if query == 'remove':
+						for x in group_names:
+							not_in_list = ''
+							removed_list = ''
+							for y in member_list:
+								if y.id in all_groups[x]["members"]:
+									all_groups[x]["members"].remove(y.id)
+									removed_list += '{}, '.format(y.name)
 								else:
-									not_in_list += '{}, '.format(all_groups[x]["name"])
+									not_in_list += '{}, '.format(y.name)
 							if not_in_list != '':
-								await client.send_message(message.channel, "{} is not a member of the group(s): {}.".format(member.name, not_in_list[:-2]))
+								result_message += 'The following members are not in the group {}: {}\n'.format(all_groups[x]["name"], not_in_list[:-2])
 							if removed_list != '':
-								await client.send_message(message.channel, "{} has removed {} from the group(s): {}.".format(message.author.name, member.name, removed_list[:-2]))
-					except:
-						pass
+								result_message += 'The following members were removed from the group {}: {}\n'.format(all_groups[x]["name"], removed_list[:-2])
+
+					await client.send_message(message.channel, result_message)
+					#except:
+					#	pass
 
 			if query == 'call':
 				group_name = message.content.partition(' ')[2].lower()
@@ -378,14 +405,17 @@ class Chatbot(object):
 				await client.send_message(message.channel, group_list)
 
 			if query == 'members':
-				member_list = ''
+				member_list = []
 				group_name = group_name = message.content.partition(' ')[2].lower()
-				for x in sorted(all_groups[group_name]["members"]):
+				for x in all_groups[group_name]["members"]:
 					serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
 					mem = discord.utils.find(lambda m: m.id == x, serv.members)
-					member_list += '{}, '.format(mem.name)
-				member_list = member_list[:-2]
-				await client.send_message(message.channel, 'The following is a list of members of the group {}:\n{}'.format(all_groups[group_name]["name"], member_list))
+					member_list += [mem.name]
+				member_list_text = ''
+				for x in sorted(member_list):
+					member_list_text += '{}, '.format(x)
+				member_list_text = member_list_text[:-2]
+				await client.send_message(message.channel, 'The following is a list of members of the group {}:\n{}'.format(all_groups[group_name]["name"], member_list_text))
 
 			if query == 'mine':
 				group_list = ''
@@ -656,15 +686,37 @@ class Chatbot(object):
 		if self.check_role(client, message, 'Leadership') == False:
 			await client.send_message(message.channel, 'You do not have permission to use the roster functions.')
 
-		elif query == 'format':
+		elif query == 'copy':
 			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
 			full_roster = json.loads(response.text)
+			with open('display_names.txt', 'r') as f:
+				display_names = json.load(f)
 			json_roster = {}
 			formatted_roster = ''
 			for x in full_roster:
-				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": x["joined"]}
+				if str(x["joined"]) == "None":
+					join_date = "None"
+				else:
+					join_data = x["joined"].partition('T')[0]
+					join_year = join_data.split('-')[0]
+					join_month = join_data.split('-')[1]
+					join_day = join_data.split('-')[2]
+					join_date = datetime(int(join_year), int(join_month), int(join_day)).strftime('%y-%m-%d')
+				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": join_date, "discord id": "N/A", "discord name": "N/A", "roles": "N/A"}
+				for y in display_names:
+					if str(display_names[y]["display name"]) == str(x["name"]):
+						serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+						member = discord.utils.find(lambda m: m.id == str(y), serv.members)
+						if member != None:
+							json_roster[x["name"]]["discord id"] = member.id
+							json_roster[x["name"]]["discord name"] = member.name
+							role_list = ''
+							for z in member.roles:
+								role_list += '{}; '.format(z.name)
+							role_list = role_list[:-2]
+							json_roster[x["name"]]["roles"] = role_list
 			for y in sorted(json_roster):
-				formatted_roster += y + ', ' + json_roster[y]["rank"] + ', ' + str(json_roster[y]["joined"]) + '\r\n'
+				formatted_roster += '{}, {}, {}, {}, {}, {}\r\n'.format(y, json_roster[y]["rank"],str(json_roster[y]["joined"]), json_roster[y]["discord id"], json_roster[y]["discord name"], json_roster[y]["roles"])
 			with open('formatted_roster.txt', 'w') as g:
 				g.write(formatted_roster)
 			await client.send_message(message.author, 'Here is the updated copy of the guild roster.')
@@ -716,6 +768,36 @@ class Chatbot(object):
 			await client.send_message(message.author, 'Here is the most recent list of potential promotions, generated on {}. If you need a more up-to-date copy, please use !roster-promotion.'.format(datetime.fromtimestamp(os.path.getmtime('promotion_list.txt'))))
 			await client.send_file(message.author, 'promotion_list.txt')
 
+		elif query == 'send specified':
+			fields = message.content.partition(' ')[2].split(', ')
+			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
+			full_roster = json.loads(response.text)
+			with open('display_names.txt', 'r') as f:
+				display_names = json.load(f)
+			json_roster = {}
+			specified_roster = ''
+			for x in full_roster:
+				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": x["joined"], "discord id": "N/A", "discord name": "N/A", "roles": "N/A"}
+				for y in display_names:
+					if str(display_names[y]["display name"]) == str(x["name"]):
+						serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+						member = discord.utils.find(lambda m: m.id == str(y), serv.members)
+						if member != None:
+							json_roster[x["name"]]["discord id"] = member.id
+							json_roster[x["name"]]["discord name"] = member.name
+							json_roster[x["name"]]["roles"] = member.roles
+			for y in sorted(json_roster):
+				specified_roster += '{}, '.format(y)
+				for x in fields:
+					specified_roster += '{}, '.format(json_roster[y][x])
+				specified_roster = specified_roster[:-2] + "\r\n"
+			with open('specified_roster.txt', 'w') as g:
+				g.write(specified_roster)
+			with open('test.txt', 'w') as g:
+				g.write(test_string)
+			await client.send_message(message.author, 'Here is the updated copy of the guild roster with the fields you asked for.')
+			await client.send_file(message.author, 'specified_roster.txt')
+			await client.send_file(message.author, 'test.txt')
 
 	async def stop_bot(self, client, message):
 		if self.check_role(client, message, 'BotManager') == True:
