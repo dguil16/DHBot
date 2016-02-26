@@ -255,6 +255,16 @@ async def on_message(message):
 		if message.content.lower().startswith('!remind-group'):
 			await remind_module.run(client, message, bot, 'group')
 
+		if message.content.lower().startswith('!role-assign'):
+			member_id_or_name = message.content.partition(' ')[2].partition('; ')[0]
+			role_names = message.content.partition(' ')[2].partition('; ')[2].split(', ')
+			await bot.role_fnc(client, message.author, message.channel, member_id_or_name, role_names, 'assign')
+
+		if message.content.lower().startswith('!role-remove'):
+			member_id_or_name = message.content.partition(' ')[2].partition('; ')[0]
+			role_names = message.content.partition(' ')[2].partition('; ')[2].split(', ')
+			await bot.role_fnc(client, message.author, message.channel, member_id_or_name, role_names, 'remove')
+
 		if message.content.lower().startswith('!roll'):
 			await bot.roll_dice(client, message)
 
