@@ -710,13 +710,11 @@ class Chatbot(object):
 					await client.send_message(channel, 'The following roles were not recognized: {}'.format(non_role))
 				
 				if query == 'assign':
-					for x in role_list:
-						await client.add_roles(member, x)
+					await client.add_roles(member, *role_list)
 					await client.send_message(channel, '{} has assigned the role(s) {} to {}.'.format(sender.name, role_name_text, member.name))
 
 				if query == 'remove':
-					for x in role_list:
-						client.remove_roles(member, x)
+					await client.remove_roles(member, *role_list)
 					await client.send_message(channel, '{} has removed the role(s) {} from {}.'.format(sender.name, role_name_text, member.name))
 
 	async def roll_dice(self, client, message):
