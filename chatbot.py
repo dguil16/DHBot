@@ -1,5 +1,6 @@
 import datetime
 from datetime import datetime
+import asyncio
 import json
 import os
 import requests
@@ -673,6 +674,48 @@ class Chatbot(object):
 				await client.delete_message(x)
 		else:
 			await client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name)
+
+	async def role_fnc(self, client, sender, channel, member_id_or_name, role_names, query):
+		if self.check_role(client, sender, 'Admin') == False and self.check_role(client, sender, 'Bot') == False:
+			await client.send_message(channel, "You do not have permission to do that.")
+		else:
+			serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+			try:
+				member_id = int(member_id_or_name)
+				member = discord.utils.find(lambda m: m.id == str(member_id), serv.members)
+			except:
+				member_name = member_id_or_name
+				if self.check_name(client, member_name) == "None":
+					await client.send_message(channel, "There is no user with that name.")
+					member == None
+				if self.check_name(client, member_name) == "Multi":
+					await client.send_message(channel, "There is no user with that name.")
+					member == None
+				if self.check_name(client, member_name) == "Unique":
+					member = discord.utils.find(lambda m: m.name == member_name, serv.members)
+			if member != None:
+				role_list = []
+				non_role = ''
+				role_name_text = ''
+				for x in role_names:
+					role = discord.utils.find(lambda m: m.name == x, serv.roles)
+					if role == None:
+						non_role += '{}, '.format(x)
+					else:
+						role_list += [role]
+						role_name_text += '{}, '.format(role.name)
+				non_role = non_role[:-2]
+				role_name_text = role_name_text[:-2]
+				if non_role != '':
+					await client.send_message(channel, 'The following roles were not recognized: {}'.format(non_role))
+				
+				if query == 'assign':
+					await client.add_roles(member, *role_list)
+					await client.send_message(channel, '{} has assigned the role(s) {} to {}.'.format(sender.name, role_name_text, member.name))
+
+				if query == 'remove':
+					await client.remove_roles(member, *role_list)
+					await client.send_message(channel, '{} has removed the role(s) {} from {}.'.format(sender.name, role_name_text, member.name))
 
 	async def roll_dice(self, client, message):
 		droll = message.content.partition(' ')[2]
