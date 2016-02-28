@@ -33,8 +33,6 @@ clever_bot = cleverbot.Session()
 # Initialize client object, begin connection
 client = discord.Client()
 
-serv = discord.utils.find(lambda m: m.name == bot.server_name, client.servers)
-
 # Event handler
 @client.event
 async def on_member_join(newmember):
@@ -362,8 +360,8 @@ async def on_ready():
 	print(client.user.name)
 	print(client.user.id)
 	print('------')
-	global server_list
-	server_list = client.servers
+	global serv
+	serv = discord.utils.find(lambda m: m.name == bot.server_name, client.servers)
 
 #if not client.is_logged_in:
 #	print('Logging in to Discord failed')
