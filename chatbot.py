@@ -639,6 +639,19 @@ class Chatbot(object):
 			with open("mission.txt", 'w') as f:
 				f.write(str(json.dumps(mission_data)))
 
+	async def play(self, client, message, serv):
+		channel = message.author.voice_channel
+		voice = await client.join_voice_channel(channel)
+		sound_clip = message.content.lower().partition(' ')[2]
+		if sound_clip == 'sadtrombone':
+			player = voice.create_ffmpeg_player('sounds/sad_trombone.mp3')
+		player.start()
+		await asyncio.sleep(3)
+		player.stop()
+		voice.disconnect()
+
+
+
 	async def price(self, client, message):
 		try:
 			item_name = message.content.partition(' ')[2]
