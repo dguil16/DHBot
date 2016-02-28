@@ -33,8 +33,6 @@ clever_bot = cleverbot.Session()
 # Initialize client object, begin connection
 client = discord.Client()
 
-server_list = []
-
 # Event handler
 @client.event
 async def on_member_join(newmember):
@@ -83,10 +81,13 @@ async def on_member_update(before, after):
 @client.event
 async def on_message(message):
 
-#	if message.content.lower().startswith('!test'):
-#		await client.send_message(message.channel, "Test successful.")
-
 	if bot.check_role(client, message, 'BotBan') == False:
+
+		if message.content.lower().startswith('!play'):
+			await bot.play(client, message, serv)
+
+		if message.content.lower() == '!stop':
+			await voice.disconnect()
 
 		if message.content.startswith('{}'.format(client.user.mention)):
 			cb_message = message.content.partition(' ')[2]
@@ -359,8 +360,8 @@ async def on_ready():
 	print(client.user.name)
 	print(client.user.id)
 	print('------')
-	global server_list
-	server_list = client.servers
+	global serv
+	serv = discord.utils.find(lambda m: m.name == bot.server_name, client.servers)
 
 #if not client.is_logged_in:
 #	print('Logging in to Discord failed')
