@@ -398,4 +398,4 @@ async def on_ready():
 #	print('Logging in to Discord failed')
 #	exit(1)
 
-client.run(bot.get_bot_credential('Username'), bot.get_bot_credential('Password'))
+client.run(bot.get_bot_credential('token'))
