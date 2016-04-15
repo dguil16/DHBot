@@ -589,7 +589,7 @@ class Chatbot(object):
 					else:
 						return last_logoff
 				except:
-					return 'before tracking'
+					return 'Before 2016/03/03'
 
 	def member_lookup(self, client, id_or_name, serv):
 		try:
@@ -731,10 +731,10 @@ class Chatbot(object):
 				member_name = member_id_or_name
 				if self.check_name(client, member_name) == "None":
 					await client.send_message(channel, "There is no user with that name.")
-					member == None
+					member = None
 				if self.check_name(client, member_name) == "Multi":
 					await client.send_message(channel, "There is no user with that name.")
-					member == None
+					member = None
 				if self.check_name(client, member_name) == "Unique":
 					member = discord.utils.find(lambda m: m.name == member_name, serv.members)
 			if member != None:
