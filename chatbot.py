@@ -747,7 +747,6 @@ class Chatbot(object):
 		for x in json_roster:
 			if json_roster[x]["discord id"] != "N/A" and json_roster[x]["rank"] != "Commander":
 				member = discord.utils.find(lambda m: m.id == json_roster[x]["discord id"], serv.members)
-				await client.send_message(message.channel, member.name)
 				rank = str(json_roster[x]["rank"])
 				rank_role = discord.utils.find(lambda m: m.name == rank, serv.roles)
 				await client.remove_roles(member, *rank_role_list)
