@@ -45,11 +45,11 @@ async def on_member_join(newmember):
 			admin_users += [x]
 		if bot.check_role(client, x, 'Leadership') == True:
 			leadership_names += [x.name]
-	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', newmember.server.channels)
+	notification_channel = discord.utils.find(lambda m: m.name == 'leadership', newmember.server.channels)
 	admin_mentions = ''
 	for x in admin_users:
 		admin_mentions += " " + (x.mention)
-	await client.send_message(notification_channel, newmember.name + ' needs permissions. ' + admin_mentions)
+	await client.send_message(notification_channel, "{} needs permissions. @here {}".format(newmember.mention, admin_mentions))
 	await client.send_message(newmember, 'Welcome to the Descendants of Honor Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text-chat and Public voice channels. If you are a member of the DH Guild Wars 2 guild or are considering becoming one, please take a moment to let us know your GW2 Display Name by sending the following message in this chat:\n`!display name <GW2 Display Name>`\nPlease note that you do not need to enter <>. For example:\n`!displayname Xantha.1234`\nPlease be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or by posting in a text channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or guild chat for assistance. If you encounter any problems with the bot, please contact Xorin.')
 
 	if newmember.name in leadership_names:
@@ -58,7 +58,7 @@ async def on_member_join(newmember):
 
 @client.event
 async def on_member_update(before, after):
-	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', after.server.channels)
+	notification_channel = discord.utils.find(lambda m: m.name == 'leadership', after.server.channels)
 
 	if (str(before.status) == 'offline' and str(after.status) == 'online') or ((str(before.status) == 'online' or str(before.status) == 'idle') and str(after.status) == 'offline'):
 		try:
@@ -277,6 +277,9 @@ async def on_message(message):
 
 		if message.content.lower().startswith('!quit'):
 			await bot.stop_bot(client, message)
+
+		if message.content.lower().startswith('!rank-update'):
+			await bot.rank_update(client, message, serv)
 
 		if message.content.lower().startswith('!remindme'):
 			await remind_module.run(client, message, bot, 'self')
