@@ -719,6 +719,41 @@ class Chatbot(object):
 		else:
 			await client.send_message(message.channel, 'I can\'t let you do that, ' +message.author.name)
 
+	async def rank_update(self, client, message, serv):
+		rank_list = ["War Council", "Elder", "Knight Warden", "Knight", "Squire", "Applicant", "Ambassador", "Guests"]
+		rank_role_list = []
+		for x in rank_list:
+			role = discord.utils.find(lambda m: m.name == x, serv.roles)
+			rank_role_list += [role]
+		response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
+		full_roster = json.loads(response.text)
+		with open('display_names.txt', 'r') as f:
+			display_names = json.load(f)
+		json_roster = {}
+		for x in full_roster:
+			json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "discord id": "N/A", "discord name": "N/A", "roles": "N/A"}
+			for y in display_names:
+				if str(display_names[y]["display name"]) == str(x["name"]):
+					serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+					member = discord.utils.find(lambda m: m.id == str(y), serv.members)
+					if member != None:
+						json_roster[x["name"]]["discord id"] = member.id
+						json_roster[x["name"]]["discord name"] = member.name
+						role_list = ''
+						for z in member.roles:
+							role_list += '{}; '.format(z.name)
+						role_list = role_list[:-2]
+						json_roster[x["name"]]["roles"] = role_list
+		for x in json_roster:
+			if json_roster[x]["discord id"] != "N/A" and json_roster[x]["rank"] != "Commander":
+				member = discord.utils.find(lambda m: m.id == json_roster[x]["discord id"], serv.members)
+				await client.send_message(message.channel, member.name)
+				rank = str(json_roster[x]["rank"])
+				rank_role = discord.utils.find(lambda m: m.name == rank, serv.roles)
+				await client.remove_roles(member, *rank_role_list)
+				await client.add_roles(member, *[rank_role])
+		await client.send_message(message.channel, "Roles have been updated according to the current roster's ranks.")
+
 	async def role_fnc(self, client, sender, channel, member_id_or_name, role_names, query):
 		if self.check_role(client, sender, 'Admin') == False and self.check_role(client, sender, 'Bot') == False:
 			await client.send_message(channel, "You do not have permission to do that.")
