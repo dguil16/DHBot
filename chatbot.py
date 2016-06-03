@@ -525,6 +525,24 @@ class Chatbot(object):
 	async def greet(self, client, message):
 		await client.send_message(message.channel, 'Howdy {}!'.format(message.author.mention))
 
+	async def guest(self, client, message, serv):
+		if self.check_role(client, message, "Member") == False:
+			await client.send_message(message.channel, "You do not have permission to use the !guest function.")
+		else:
+			guest_name = message.content.partition(' ')[2]
+			guest_mem = discord.utils.find(lambda m: m.name == guest_name, serv.members)
+			guest_role = discord.utils.find(lambda m: m.name == "Guest", serv.roles)
+			if guest_mem == None:
+				await client.send_message(message.channel, "There is no user with than name. Please ensure you entered the correct name (please note that capitalization matters).")
+			else:
+				if len(guest_mem.roles) > 1:
+					await client.send_message(message.channel, "That member already has a role assigned to them.")
+				else:
+					await client.add_roles(guest_mem, guest_role)
+					await client.send_message(message.channel, "{} has given {} the Guest role.".format(message.author.name, guest_mem.name))
+					notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', serv.channels)
+					await client.send_message(notification_channel, "{} ({}) has given {} ({}) the Guest role.".format(message.author.name, message.author.id, guest_mem.name, guest_mem.id))
+
 	async def id_fnc(self, client, message, query):
 		if query =='other' and self.check_role(client, message, "Leadership") == True:
 			name = message.content.partition(' ')[2]
