@@ -205,6 +205,9 @@ async def on_message(message):
 		if message.content.lower().startswith('!group-info'):
 			await bot.group(client, message, 'info')
 
+		if message.content.lower().startswith('!guest'):
+			await bot.guest(client, message, serv)
+
 		if message.content.lower().startswith('!hello'):
 			await bot.greet(client, message)
 
