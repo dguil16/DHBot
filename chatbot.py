@@ -211,17 +211,6 @@ class Chatbot(object):
 		disp_names = json.load(x)
 		x.close()
 
-		if query == 'self':
-			if message.author.id in disp_names:
-				await client.send_message(message.channel, "Your display name has alread been entered as {}. If this is not correct, please inform an Admin.".format(disp_names[message.author.id]))
-			else:
-				error_check = message.content.partition(' ')[2].partition('.')
-				if len(error_check[2]) == 4:
-					disp_names[message.author.id] = {"display name": message.content.partition(' ')[2], "verified": "n"}
-					await client.send_message(message.channel, "Your display name has been entered as {}. If you made an error, please contact an Admin.".format(message.content.partition(' ')[2]))
-				else:
-					await client.send_message(message.channel, "Please ensure that you include the 4 digits at the end of your display name.")
-
 		if query == 'send' and self.check_role(client, message, "Leadership") == True:
 			serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
 			x = open('display_names.txt', 'r')
@@ -554,6 +543,7 @@ class Chatbot(object):
 		if query == 'self':
 			await client.send_message(message.channel, 'Your Discord ID is: {}'.format(message.author.id))
 
+	"""
 	async def help(self, client, message, query):
 		f = open(self.help_text_file, 'r')
 		help_file = json.load(f)
@@ -628,6 +618,7 @@ class Chatbot(object):
 		f = open(self.help_text_file, 'w')
 		f.write(str(json.dumps(help_file)))
 		f.close()
+		"""
 
 	async def lmgtfy(self, client, message):
 		search = message.content.partition(' ')[2].replace(' ','+')
