@@ -966,10 +966,10 @@ class Chatbot(object):
 							json_roster[x["name"]]["discord name"] = member.name
 							json_roster[x["name"]]["roles"] = member.roles
 			for y in sorted(json_roster):
-				specified_roster += '{}, '.format(y)
+				specified_roster += '{},'.format(y)
 				for x in fields:
 					specified_roster += '{}, '.format(json_roster[y][x])
-				specified_roster = specified_roster[:-2] + "\r\n"
+				specified_roster = specified_roster[:-1] + "\r\n"
 			with open('specified_roster.txt', 'w') as g:
 				g.write(specified_roster)
 #			with open('test.txt', 'w') as g:
