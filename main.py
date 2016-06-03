@@ -16,6 +16,7 @@ from cleverbot import cleverbot
 from chatbot import Chatbot
 from polls import Poll
 from reminder import Reminder
+from timezone import Timezone
 from trivia import Trivia
 
 # Set up the logging module to output diagnostic to the console.
@@ -24,6 +25,7 @@ logging.basicConfig()
 # Create new instances of bot objects
 bot = Chatbot('settings.txt')
 remind_module = Reminder()
+timezone_module = Timezone()
 trivia_module = Trivia()
 poll_module = Poll()
 
@@ -45,12 +47,15 @@ async def on_member_join(newmember):
 			admin_users += [x]
 		if bot.check_role(client, x, 'Leadership') == True:
 			leadership_names += [x.name]
-	notification_channel = discord.utils.find(lambda m: m.name == 'leadership', newmember.server.channels)
+	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', newmember.server.channels)
+	if notification_channel == None:
+		await client.create_channel(serv, 'bot-notifications')
+		notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', newmember.server.channels)
 	admin_mentions = ''
 	for x in admin_users:
 		admin_mentions += " " + (x.mention)
-	await client.send_message(notification_channel, "{} needs permissions. @here {}".format(newmember.mention, admin_mentions))
-	await client.send_message(newmember, 'Welcome to the Descendants of Honor Discord server. My name is ' +client.user.name +', the chat bot for this server. I have sent a message to the server Admins to let them know you have joined. They will give you appropriate permissions as soon as possible.\n\nIn the meantime, you are free to use the lobby text-chat and Public voice channels. If you are a member of the DH Guild Wars 2 guild or are considering becoming one, please take a moment to let us know your GW2 Display Name by sending the following message in this chat:\n`!display name <GW2 Display Name>`\nPlease note that you do not need to enter <>. For example:\n`!displayname Xantha.1234`\nPlease be sure to read the announcements as well.\n\nYou may also utilize some of my functions by responding to this message or by posting in a text channel. To find a list of my functions, you may type !help.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or guild chat for assistance. If you encounter any problems with the bot, please contact Xorin.')
+	await client.send_message(notification_channel, "{} needs permissions. {}".format(newmember.mention, admin_mentions))
+	await client.send_message(newmember, 'Welcome to the Discord server for Descendants of Honor. My name is Xantha, the chat bot for this server. If you are a member of DH or intend to join our guild in the future, please respond to this message with the following to verify that you are a member so that you can automatically receive the appropriate permissions for Discord:\n`!api <Your GW2 API key>`, without the <>. This API key only needs the \"Account\" permissions. For example:\n`!api AG6BE513-0890-A640-97D9-708A7594593781E9803C-F348-48B4-9A70-CE0B45072778`\n\nIf you are unfamiliar with this process, do the following:\n\n1) Go to https://account.arena.net/\n2) Click on \"Applications\" at the upper right.\n3) Click \"New Key\" on the right.\n4) Name the key whatever you would like and ensure the \"account\" checkbox is checked. You do not need to check any other boxes.\n5) Click \"Generate API Key\"\n\nThe information this makes available is the following: your GW2 display name, the world you belong to, if you are a commander, what guilds you are in, when your account was created, if you have a commander tag, and if your account is a free account, a GW2 account, or a HoT account. The only information that we will store is your display name, and you are welcome to delete this API key after you submit it.\n:exclamation: Submitting this is required for DH members.\n\nIf you are not a DH member, you may still submit this information so that we may know who you are in game, but it will not automatically assign you permissions. You will need to contact Alethia or Xorin, or have another member give you guest permissions. In the mean time, you are welcome to use the lobby text channel or Public voice channel.\n\nIf you are having difficulties with your sound or voice in Discord, you can check https://support.discordapp.com/hc/en-us or ask in Discord or guild chat for assistance. If you encounter any problems with the bot, please contact Xorin.')
 
 	if newmember.name in leadership_names:
 		await client.send_message(newmember, "I have noticed that your name matches the name of one of our members of leadership. Please take a moment to go to your Discord settings (the cog on the lower left of the client) and change your username. If you need assistance with this, please ask. Failure to make this change may result in your Discord permissions being revoked.")
@@ -81,7 +86,7 @@ async def on_member_update(before, after):
 			disp_names = json.load(x)
 			x.close()
 			if after.id not in disp_names:
-				await client.send_message(after, "My name is Xantha, the DH Discord bot. According to my records, your GW2 Display Name is not listed in our database. Please enter \n`!displayname <GW2 Display name>`\n without the <>, for example \n`!displayname Xantha.1234`\nin Discord. Be sure to use your full name, including the 4 digits at the end. If you need help, please ask an Admin.")
+				await client.send_message(after, "My name is Xantha, the DH Discord bot. According to my records, your GW2 Display Name is not listed in our database. Please enter \n`!api <GW2 API>`\n without the <>. This API key only needs the \"Account\" permissions. For example:\n`!api AG6BE513-0890-A640-97D9-708A7594593781E9803C-F348-48B4-9A70-CE0B45072778`\n\nIf you are unfamiliar with this process, do the following:\n\n1) Go to https://account.arena.net/\n2) Click on \"Applications\" at the upper right.\n3) Click \"New Key\" on the right.\n4) Name the key whatever you would like and ensure the \"account\" checkbox is checked. You do not need to check any other boxes.\n5) Click \"Generate API Key\"\n\nThe information this makes available is the following: your GW2 display name, the world you belong to, if you are a commander, what guilds you are in, when your account was created, if you have a commander tag, and if your account is a free account, a GW2 account, or a HoT account. The only information that we will store is your display name, and you are welcome to delete this API key after you submit it.")
 
 	leadership_names = []
 	for x in after.server.members:
@@ -102,14 +107,14 @@ async def on_message(message):
 
 	if bot.check_role(client, message, 'BotBan') == False:
 
-		if message.content.lower() == '!test':
-			await client.send_message(message.channel, serv.name)
+#		if message.content.lower() == '!test':
+#			await client.send_message(message.channel, serv.name)
 
-		if message.content.lower().startswith('!play'):
-			await bot.play(client, message, serv)
+#		if message.content.lower().startswith('!play'):
+#			await bot.play(client, message, serv)
 
-		if message.content.lower() == '!stop':
-			await voice.disconnect()
+#		if message.content.lower() == '!stop':
+#			await voice.disconnect()
 
 		if message.content.startswith('{}'.format(client.user.mention)):
 			cb_message = message.content.partition(' ')[2]
@@ -124,6 +129,9 @@ async def on_message(message):
 
 		if message.content.lower().startswith('!adminhelp-delete'):
 			await bot.help(client, message, 'delete-admin')
+
+		if message.content.lower().startswith('!api '):
+			await bot.api(client, message, serv)
 
 		if message.content.lower().startswith('!away-return'):
 			await bot.away_fnc(client, message, 'return')
@@ -279,16 +287,27 @@ async def on_message(message):
 			await bot.stop_bot(client, message)
 
 		if message.content.lower().startswith('!rank-update'):
-			await bot.rank_update(client, message, serv)
+			if check_role(message, 'Admin') == True:
+				await bot.rank_update(client, message, serv)
+			else:
+				await client.send_message(message.channel, 'You do not have permission to use this function.')
 
 		if message.content.lower().startswith('!remindme'):
-			await remind_module.run(client, message, bot, 'self')
+			await remind_module.run(client, message, bot)
+
+		if message.content.lower().startswith('!food'):
+			await client.send_message(message.channel, "Timer started.")
+			await asyncio.sleep(1500) #25 minutes = 1500
+			await client.send_message(message.channel, "Food check!")
 
 		if message.content.lower().startswith('!reminder'):
-			await remind_module.run(client, message, bot, 'channel')
+			await remind_module.channel(client, message, bot)
 
 		if message.content.lower().startswith('!remind-group'):
-			await remind_module.run(client, message, bot, 'group')
+			await remind_module.group(client, message, bot)
+
+		if message.content.lower().startswith('!tz'):
+			await timezone_module.setTimeZone(client, message)
 
 		if message.content.lower().startswith('!role-assign'):
 			member_id_or_name = message.content.partition(' ')[2].partition('; ')[0]
