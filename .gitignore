@@ -5,5 +5,7 @@
 
 *.txt
 *.txt~
+*.json
+*.json~
 *pycache*
 *sounds

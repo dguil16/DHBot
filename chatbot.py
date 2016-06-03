@@ -71,6 +71,51 @@ class Chatbot(object):
 			event_time = event_time + datetime.timedelta(days=1)
 			return (event_time - now)
 
+	async def api(self, client, message, serv):
+		if message.channel.is_private == False:
+			await client.delete_message(message)
+		api_key = message.content.partition(' ')[2]
+		with open('display_names.txt', 'r') as f:
+			display_names = json.load(f)
+		member = discord.utils.find(lambda m: m.id == message.author.id, serv.members)
+		member_role = discord.utils.find(lambda m: m.name == "Member", serv.roles)
+		response = requests.get("https://api.guildwars2.com/v2/account?access_token={}".format(api_key))
+		account_info = json.loads(response.text)
+		try:
+			error_check = account_info["text"]
+			error = True
+		except:
+			error = False
+		if error == True:
+			client.send_message(message.channel, "There seems to be an error with your API key. Please try again.")
+		elif error == False:
+			account_name = account_info["name"]
+			name_in_use = False
+			for x in display_names:
+				if display_names[x]["display name"] == account_name:
+					name_in_use = True
+			if name_in_use == True:
+				await client.send_message(message.channel, "The display name {} is already registered to another Discord user. If you believe this is a mistake or if you have created a new Discord account, please contact Xorin.".format(account_name))
+			else:
+				account_guilds = account_info["guilds"]
+				if self.guild_id in account_guilds:
+					response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
+					guild_roster = json.loads(response.text)
+					for x in guild_roster:
+						if x["name"] == account_name:
+							rank = x["rank"]
+					if rank != "Commander":
+						rank_role = discord.utils.find( lambda m: m.name == rank, serv.roles)
+						await client.add_roles(member, *[member_role, rank_role])
+					else:
+						await client.add_roles(member, member_role)
+					await client.send_message(message.channel, "Your display name has been recorded as {} and you have been given the Member role and appropriate rank role.".format(account_name))
+				else:
+					await client.send_message(message.channel, "Your display name has been recorded as {}. I could not find you on the DH roster, so a member of leadership will need to assign your permissions.")
+				display_names[str(member.id)] = {"display name": account_name, "verified": "y"}
+				with open('display_names.txt', 'w') as f:
+					f.write(str(json.dumps(display_names)))
+
 	async def away_fnc(self, client, message, query):
 		f = open(self.away_list, 'r')
 		away = json.load(f)
@@ -797,12 +842,15 @@ class Chatbot(object):
 					await client.send_message(channel, '{} has removed the role(s) {} from {}.'.format(sender.name, role_name_text, member.name))
 
 	async def roll_dice(self, client, message):
-		droll = message.content.partition(' ')[2]
-		clean = droll.split('d')
-		if 0 < int(clean[0]) < 51 and 0 < int(clean[1]) < 1001:
-			await client.send_message(message.channel, str(dice.roll(droll)))
-		else:
-			await client.send_message(message.channel, 'Not an appropriate amount or size of dice.')
+		try:
+			droll = message.content.partition(' ')[2]
+			clean = droll.split('d')
+			if 0 < int(clean[0]) < 51 and 0 < int(clean[1]) < 1001:
+				await client.send_message(message.channel, "{} rolled {} {}-sided dice. Here are the results:\n{}".format(message.author, clean[0], clean[1], str(dice.roll(droll))))
+			else:
+				await client.send_message(message.channel, 'Not an appropriate amount or size of dice.')
+		except:
+			await client.send_message(message.channel, "There was an error with your request. Please ensure you are using the correct format. E.g.: `!roll 2d8`")
 
 	async def roster_fnc(self, client, message, query):
 		if self.check_role(client, message, 'Leadership') == False:
@@ -883,7 +931,7 @@ class Chatbot(object):
 		elif query == 'send':
 			raw_time = os.path.getmtime('formatted_roster.txt')
 			mod_time = datetime.fromtimestamp(raw_time)
-			await client.send_message(message.author, 'Here is the most recent roster, generated on {}. If you need a more up-to-date copy, please use !roster-formattedcopy.'.format(mod_time))
+			await client.send_message(message.author, 'Here is the most recent roster, generated on {}. If you need a more up-to-date copy, please use !roster-copy.'.format(mod_time))
 			await client.send_file(message.author, 'formatted_roster.txt')
 
 		elif query == 'send promotion':
@@ -915,11 +963,11 @@ class Chatbot(object):
 				specified_roster = specified_roster[:-2] + "\r\n"
 			with open('specified_roster.txt', 'w') as g:
 				g.write(specified_roster)
-			with open('test.txt', 'w') as g:
-				g.write(test_string)
+#			with open('test.txt', 'w') as g:
+#				g.write(test_string)
 			await client.send_message(message.author, 'Here is the updated copy of the guild roster with the fields you asked for.')
 			await client.send_file(message.author, 'specified_roster.txt')
-			await client.send_file(message.author, 'test.txt')
+#			await client.send_file(message.author, 'test.txt')
 
 	async def stop_bot(self, client, message):
 		if self.check_role(client, message, 'BotManager') == True:
