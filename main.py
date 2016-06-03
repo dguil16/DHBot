@@ -121,14 +121,14 @@ async def on_message(message):
 			answer = clever_bot.Ask(str(cb_message))
 			await client.send_message(message.channel, str(answer))
 
-		if message.content.lower() == '!adminhelp':
-			await bot.help(client, message, 'admin')
+#		if message.content.lower() == '!adminhelp':
+#			await bot.help(client, message, 'admin')
 
-		if message.content.lower().startswith('!adminhelp-add'):
-			await bot.help(client, message, 'add-admin')
+#		if message.content.lower().startswith('!adminhelp-add'):
+#			await bot.help(client, message, 'add-admin')
 
-		if message.content.lower().startswith('!adminhelp-delete'):
-			await bot.help(client, message, 'delete-admin')
+#		if message.content.lower().startswith('!adminhelp-delete'):
+#			await bot.help(client, message, 'delete-admin')
 
 		if message.content.lower().startswith('!api '):
 			await bot.api(client, message, serv)
@@ -147,9 +147,6 @@ async def on_message(message):
 		
 		if message.content.lower().startswith('!clear'):
 			await bot.clear(client, message)
-
-		if message.content.lower().startswith('!displayname '):
-			await bot.displayname(client, message, 'self')
 
 		if message.content.lower().startswith('!displayname-send'):
 			await bot.displayname(client, message, 'send')
@@ -211,20 +208,20 @@ async def on_message(message):
 		if message.content.lower().startswith('!hello'):
 			await bot.greet(client, message)
 
-		if message.content.lower() == '!help':
+#		if message.content.lower() == '!help':
 			await bot.help(client, message, 'read')
 
-		if message.content.lower().startswith('!help '):
-			await bot.help(client, message, 'info')
+		if message.content.lower().startswith('!help'):
+			await client.send_message(message.channel, "You can find a list of commands I understand, their syntax, and brief explanation in the following document: https://goo.gl/80heLg")
 
-		if message.content.lower().startswith('!help-edit'):
-			await bot.help(client, message, 'edit')
+#		if message.content.lower().startswith('!help-edit'):
+#			await bot.help(client, message, 'edit')
 
-		if message.content.lower().startswith('!help-add'):
-			await bot.help(client, message, 'add')
+#		if message.content.lower().startswith('!help-add'):
+#			await bot.help(client, message, 'add')
 
-		if message.content.lower().startswith('!help-delete'):
-			await bot.help(client, message, 'delete')
+#		if message.content.lower().startswith('!help-delete'):
+#			await bot.help(client, message, 'delete')
 
 		if message.content.startswith('!last_on '):
 			id_or_name = message.content.partition(' ')[2]
