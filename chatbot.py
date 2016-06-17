@@ -899,7 +899,7 @@ class Chatbot(object):
 			await client.send_message(message.author, 'Here is the updated copy of the guild roster with the fields you asked for.')
 			await client.send_file(message.author, 'specified_roster.txt')
 
-	def roster_update(self):
+	def roster_update(self, client):
 		response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
 		full_roster = json.loads(response.text)
 		with open('display_names.txt', 'r') as f:
@@ -928,7 +928,7 @@ class Chatbot(object):
 						role_list = role_list[:-2]
 						json_roster[x["name"]]["roles"] = role_list
 		with open('jsonroster.txt', 'w') as f:
-			f.write(json_roster)
+			f.write(str(json.dumps(json_roster)))
 
 	async def stop_bot(self, client, message):
 		if self.check_role(client, message, 'BotManager') == True:
