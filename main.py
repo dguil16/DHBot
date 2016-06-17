@@ -3,6 +3,7 @@
 import asyncio
 import datetime
 from datetime import datetime
+import RPi.GPIO as GPIO
 import json
 import os
 import sys
@@ -28,6 +29,12 @@ remind_module = Reminder()
 timezone_module = Timezone()
 trivia_module = Trivia()
 poll_module = Poll()
+
+# RPi Lighting
+if bot.gpio_enabled == "yes":
+	GPIO.setmode(GPIO.BCM)
+	statPin = 4
+	GPIO.setup(statPin, GPIO.OUT)
 
 #cleverbot object
 clever_bot = cleverbot.Session()
@@ -102,10 +109,50 @@ async def on_member_update(before, after):
 	if str(before.status) == 'offline' and str(after.status) == 'online' and after.name == "Scottzilla":
 		await client.send_message(after, ":boom: Happy birthday! :boom:")
 
+
+	with open('display_names.txt', 'r') as f:
+		display_names = json.load(f)
+	last_update = os.path.getmtime('formatted_roster.txt')
+	update_time = datetime.datetime.now() - last_update
+	if update_time.total_seconds > 900: #15 minutes = 900 seconds
+		bot.roster_update()
+	with open('jsonroster.txt', 'r') as f:
+		raw_roster = json.load(f)
+
+	if before.id in display_names:
+		name = display_names[str(before.id)]["display name"]
+			if name in raw_roster:
+				rank = raw_roster[name]["rank"]
+			else:
+				rank = "None"
+	role_name_list = []
+	for x in before.roles:
+		role_name_list += [x.name]
+	everyone_role = discord.utils.find(lambda m: m.name == "@everyone", serv.roles)
+	member_role = discord.utils.find(lambda m: m.name == "Member", serv.roles)
+	leadership_role = discord.utils.find(lambda m: m.name == "Leadership", serv.roles)
+	
+	if rank = "None" and bot.check_role(before, "Admin") == False:
+		if "Member" in role_name_list:
+			non_everyone_roles = before.roles.remove(everyone_role)
+			client.remove_roles(before, *[non_everyone_roles])
+			client.add_roles(before, *[guest_role])
+
+	elif rank != "Commander" and rank != "None":
+		rank_role = discord.utils.find(lambda m: m.name == rank, serv.roles)
+		if rank not in role_name_list:
+			old_roles = after.roles.remove(everyone_role).remove(member_role).remove(leadership_role)
+			client.remove_roles(after, *old_roles)
+			client.add_roles(after, *[rank_role])
+			
+
 @client.event
 async def on_message(message):
 
 	if bot.check_role(client, message, 'BotBan') == False:
+
+		if bot.gpio_enabled == "yes":
+			GPIO.output(statPin,1)
 
 #		if message.content.lower() == '!test':
 #			await client.send_message(message.channel, serv.name)
@@ -120,15 +167,6 @@ async def on_message(message):
 			cb_message = message.content.partition(' ')[2]
 			answer = clever_bot.Ask(str(cb_message))
 			await client.send_message(message.channel, str(answer))
-
-#		if message.content.lower() == '!adminhelp':
-#			await bot.help(client, message, 'admin')
-
-#		if message.content.lower().startswith('!adminhelp-add'):
-#			await bot.help(client, message, 'add-admin')
-
-#		if message.content.lower().startswith('!adminhelp-delete'):
-#			await bot.help(client, message, 'delete-admin')
 
 		if message.content.lower().startswith('!api '):
 			await bot.api(client, message, serv)
@@ -208,20 +246,8 @@ async def on_message(message):
 		if message.content.lower().startswith('!hello'):
 			await bot.greet(client, message)
 
-#		if message.content.lower() == '!help':
-			await bot.help(client, message, 'read')
-
 		if message.content.lower().startswith('!help'):
 			await client.send_message(message.channel, "You can find a list of commands I understand, their syntax, and brief explanation in the following document: https://goo.gl/80heLg")
-
-#		if message.content.lower().startswith('!help-edit'):
-#			await bot.help(client, message, 'edit')
-
-#		if message.content.lower().startswith('!help-add'):
-#			await bot.help(client, message, 'add')
-
-#		if message.content.lower().startswith('!help-delete'):
-#			await bot.help(client, message, 'delete')
 
 		if message.content.startswith('!last_on '):
 			id_or_name = message.content.partition(' ')[2]
@@ -406,6 +432,9 @@ async def on_message(message):
 		if '(╯°□°）╯︵ ┻━┻' in message.content:
 			await client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')
 
+		if bot.gpio_enabled == "yes":
+			GPIO.output(statPin,0)
+
 
 @client.event
 async def on_ready():
@@ -421,3 +450,4 @@ async def on_ready():
 #	exit(1)
 
 client.run(bot.get_bot_credential('token'))
+GPIO.cleanup()

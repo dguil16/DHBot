@@ -24,6 +24,7 @@ class Chatbot(object):
 		self.guild_id = settings["Guild ID"]
 		self.api_key = settings["API Key"]
 		self.away_list = settings["Away"]
+		self.gpio_enabled = settings["GPIO"]
 
 	async def _weekly_event(self, event_day, event_hour, event_minute):
 		"""
@@ -543,83 +544,6 @@ class Chatbot(object):
 		if query == 'self':
 			await client.send_message(message.channel, 'Your Discord ID is: {}'.format(message.author.id))
 
-	"""
-	async def help(self, client, message, query):
-		f = open(self.help_text_file, 'r')
-		help_file = json.load(f)
-		f.close()
-
-		if query == 'admin':
-			help_list = ''
-			for x in sorted(help_file["Admin Commands"]):
-				help_list += x + '\n'
-			await client.send_message(message.channel, 'The following is a list of commands that are usable by Admins. For more information about a specific command, please type \"!help <command>\".\n\n' + help_list)
-
-		if query == 'info':
-			help_query = message.content.partition(' ')[2]
-			await client.send_message(message.channel, help_file[help_query])
-
-		if query == 'read':
-			help_list = ''
-			for x in sorted(help_file["Commands"]):
-				help_list += x + '\n'
-			await client.send_message(message.channel, 'The following is a list of commands that I understand. For more information about a specific command, please type \"!help <command>\".\n\n' + help_list)
-
-		if self.check_role(client, message, 'Admin'):
-			if query == 'add':
-				help_msg = message.content.partition(' ')[2].partition('; ')
-				help_name = help_msg[0]
-				help_text = help_msg[2]
-				if help_name not in help_file["Commands"]:
-					help_file["Commands"].append(help_name)
-					help_file[help_name] = help_text
-					await client.send_message(message.channel, 'The help entry for ' +help_name + ' has been created.')
-				else:
-					await client.send_message(message.channel, 'That help entry already exists. Please use !edit-help instead.')
-
-			if query == 'add-admin':
-				help_msg = message.content.partition(' ')[2].partition('; ')
-				help_name = help_msg[0]
-				help_text = help_msg[2]
-				if help_name not in help_file["Admin Commands"]:
-					help_file["Admin Commands"].append(help_name)
-					help_file[help_name] = help_text
-					await client.send_message(message.channel, 'The help entry for ' +help_name + ' has been created.')
-				else:
-					await client.send_message(message.channel, 'That help entry already exists. Please use !edit-help instead.')
-
-			if query == 'delete':
-				help_name = message.content.partition(' ')[2]
-				if help_name in help_file["Commands"]:
-					help_file["Commands"].remove(help_name)
-					del help_file[help_name]
-					await client.send_message(message.channel, 'The help entry for ' +help_name + ' has been deleted.')
-				else:
-					await client.send_message(message.channel, 'There is no help entry by that name.')
-
-			if query == 'delete-admin':
-				help_name = message.content.partition(' ')[2]
-				if help_name in help_file["Admin Commands"]:
-					help_file["Admin Commands"].remove(help_name)
-					del help_file[help_name]
-					await client.send_message(message.channel, 'The help entry for ' +help_name + ' has been deleted.')
-				else:
-					await client.send_message(message.channel, 'There is no help entry by that name.')
-			if query == 'edit':
-				help_msg = message.content.partition(' ')[2].partition('; ')
-				help_name = help_msg[0]
-				help_text = help_msg[2]
-				if help_name in help_file["Commands"] or help_name in help_file["Admin Commands"]:
-					help_file[help_name] = help_text
-					await client.send_message(message.channel, 'The information for ' +help_name + ' has been edited.')
-				else:
-					await client.send_message(message.channel, 'There is no help entry for ' + help_name +'. Please use !add-help or !add-adminhelp to create it.')
-
-		f = open(self.help_text_file, 'w')
-		f.write(str(json.dumps(help_file)))
-		f.close()
-		"""
-
 	async def lmgtfy(self, client, message):
 		search = message.content.partition(' ')[2].replace(' ','+')
 		await client.send_message(message.channel, 'http://lmgtfy.com/?q='+search)
@@ -972,11 +896,39 @@ class Chatbot(object):
 				specified_roster = specified_roster[:-1] + "\r\n"
 			with open('specified_roster.txt', 'w') as g:
 				g.write(specified_roster)
-#			with open('test.txt', 'w') as g:
-#				g.write(test_string)
 			await client.send_message(message.author, 'Here is the updated copy of the guild roster with the fields you asked for.')
 			await client.send_file(message.author, 'specified_roster.txt')
-#			await client.send_file(message.author, 'test.txt')
+
+	def roster_update(self):
+		response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
+		full_roster = json.loads(response.text)
+		with open('display_names.txt', 'r') as f:
+			display_names = json.load(f)
+		json_roster = {}
+		for x in full_roster:
+			if str(x["joined"]) == "None":
+				join_date = "None"
+			else:
+				join_data = x["joined"].partition('T')[0]
+				join_year = join_data.split('-')[0]
+				join_month = join_data.split('-')[1]
+				join_day = join_data.split('-')[2]
+				join_date = datetime(int(join_year), int(join_month), int(join_day)).strftime('%y-%m-%d')
+			json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": join_date, "discord id": "N/A", "discord name": "N/A", "roles": "N/A"}
+			for y in display_names:
+				if str(display_names[y]["display name"]) == str(x["name"]):
+					serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
+					member = discord.utils.find(lambda m: m.id == str(y), serv.members)
+					if member != None:
+						json_roster[x["name"]]["discord id"] = member.id
+						json_roster[x["name"]]["discord name"] = member.name
+						role_list = ''
+						for z in member.roles:
+							role_list += '{}; '.format(z.name)
+						role_list = role_list[:-2]
+						json_roster[x["name"]]["roles"] = role_list
+		with open('jsonroster.txt', 'w') as f:
+			f.write(json_roster)
 
 	async def stop_bot(self, client, message):
 		if self.check_role(client, message, 'BotManager') == True:
