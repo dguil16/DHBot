@@ -29,6 +29,13 @@ timezone_module = Timezone()
 trivia_module = Trivia()
 poll_module = Poll()
 
+# RPi Lighting
+if bot.gpio_enabled == "yes":
+	import RPi.GPIO as GPIO
+	GPIO.setmode(GPIO.BCM)
+	statPin = 4
+	GPIO.setup(statPin, GPIO.OUT)
+
 #cleverbot object
 clever_bot = cleverbot.Session()
 
@@ -63,7 +70,7 @@ async def on_member_join(newmember):
 
 @client.event
 async def on_member_update(before, after):
-	notification_channel = discord.utils.find(lambda m: m.name == 'leadership', after.server.channels)
+	notification_channel = discord.utils.find(lambda m: m.name == 'bot-notifications', after.server.channels)
 
 	if (str(before.status) == 'offline' and str(after.status) == 'online') or ((str(before.status) == 'online' or str(before.status) == 'idle') and str(after.status) == 'offline'):
 		try:
@@ -102,10 +109,64 @@ async def on_member_update(before, after):
 	if str(before.status) == 'offline' and str(after.status) == 'online' and after.name == "Scottzilla":
 		await client.send_message(after, ":boom: Happy birthday! :boom:")
 
+	if str(before.status) != str(after.status):
+		member = discord.utils.find(lambda m: m.id == after.id, serv.members)
+		with open('display_names.txt', 'r') as f:
+			display_names = json.load(f)
+		last_update_raw = os.path.getmtime('jsonroster.txt')
+		last_update = datetime.fromtimestamp(last_update_raw)
+		update_time = datetime.now() - last_update
+		if update_time.total_seconds() > 900: #15 minutes = 900 seconds
+			bot.roster_update(client)
+		with open('jsonroster.txt', 'r') as f:
+			raw_roster = json.load(f)
+
+		if member.id in display_names:
+			name = display_names[str(member.id)]["display name"]
+			if name in raw_roster:
+				rank = raw_roster[name]["rank"]
+			else:
+				rank = "None"
+			role_name_list = []
+			for x in member.roles:
+				role_name_list += [x.name]
+			member_role = discord.utils.find(lambda m: m.name == "Member", serv.roles)
+			rank_list = ["War Council", "Elder", "Knight Warden", "Knight", "Squire", "Applicant", "Ambassador", "Guests"]
+			if rank == "None" and bot.check_role(client, member, "Commander") == False:
+				if "Member" in role_name_list:
+					for x in role_name_list:
+						if x in rank_list:
+							old_rank = x
+					old_rank_role = discord.utils.find(lambda m: m.name == old_rank, serv.roles)
+					roles_to_remove = [old_rank_role, member_role]
+					await client.remove_roles(member, old_rank_role)
+					await asyncio.sleep(2)
+					await client.remove_roles(member, member_role)
+					await asyncio.sleep(2)
+					guest_role = discord.utils.find(lambda m: m.name == "Guest", serv.roles)
+					await client.add_roles(member, guest_role)
+					await client.send_message(notification_channel, "{} is no longer a member of the guild and has been given the Guest rank. Removed {} and {} roles.".format(member.name, member_role.name, old_rank_role.name))
+
+			elif rank != "Commander" and rank != "None" and bot.check_role(client, member, "Commander") == False:
+				if rank not in role_name_list:
+					for x in role_name_list:
+						if x in rank_list:
+							old_rank = x
+					old_rank_role = discord.utils.find(lambda m: m.name == old_rank, serv.roles)
+					await client.remove_roles(member, old_rank_role)
+					await asyncio.sleep(1)
+					rank_role = discord.utils.find(lambda m: m.name == rank, serv.roles)
+					await client.add_roles(member, rank_role)
+					await client.send_message(notification_channel, "{}'s rank changed from {} to {}.".format(member.name, old_rank_role.name, rank_role.name))
+			
+
 @client.event
 async def on_message(message):
 
 	if bot.check_role(client, message, 'BotBan') == False:
+
+		if bot.gpio_enabled == "yes":
+			GPIO.output(statPin,1)
 
 #		if message.content.lower() == '!test':
 #			await client.send_message(message.channel, serv.name)
@@ -120,15 +181,6 @@ async def on_message(message):
 			cb_message = message.content.partition(' ')[2]
 			answer = clever_bot.Ask(str(cb_message))
 			await client.send_message(message.channel, str(answer))
-
-#		if message.content.lower() == '!adminhelp':
-#			await bot.help(client, message, 'admin')
-
-#		if message.content.lower().startswith('!adminhelp-add'):
-#			await bot.help(client, message, 'add-admin')
-
-#		if message.content.lower().startswith('!adminhelp-delete'):
-#			await bot.help(client, message, 'delete-admin')
 
 		if message.content.lower().startswith('!api '):
 			await bot.api(client, message, serv)
@@ -208,22 +260,10 @@ async def on_message(message):
 		if message.content.lower().startswith('!hello'):
 			await bot.greet(client, message)
 
-#		if message.content.lower() == '!help':
-			await bot.help(client, message, 'read')
-
 		if message.content.lower().startswith('!help'):
 			await client.send_message(message.channel, "You can find a list of commands I understand, their syntax, and brief explanation in the following document: https://goo.gl/80heLg")
 
-#		if message.content.lower().startswith('!help-edit'):
-#			await bot.help(client, message, 'edit')
-
-#		if message.content.lower().startswith('!help-add'):
-#			await bot.help(client, message, 'add')
-
-#		if message.content.lower().startswith('!help-delete'):
-#			await bot.help(client, message, 'delete')
-
-		if message.content.startswith('!last_on '):
+		if message.content.lower().startswith('!last_on '):
 			id_or_name = message.content.partition(' ')[2]
 			member = bot.member_lookup(client, id_or_name, serv)
 			if member != None:
@@ -325,6 +365,9 @@ async def on_message(message):
 		if message.content.lower().startswith('!roster-copy'):
 			await bot.roster_fnc(client, message, 'copy')
 
+		if message.content.lower() == "!roster-last_on":
+			await bot.roster_fnc(client, message, 'last on')
+
 		if message.content.lower().startswith('!roster-promotion'):
 			await bot.roster_fnc(client, message, 'promotion')
 
@@ -336,6 +379,10 @@ async def on_message(message):
 
 		if message.content.lower().startswith('!roster-sendpromotion'):
 			await bot.roster_fnc(client, message, 'send promotion')
+
+		if message.content.lower().startswith('!roster-update') and bot.check_role(client, message, "Admin") == True:
+			bot.roster_update(client)
+			await client.send_message(message.channel, "The roster database has been updated.")
 
 		if message.content.lower().startswith('!survey-change'):
 			await poll_module.survey_fnc(client, message, 'change')
@@ -406,6 +453,9 @@ async def on_message(message):
 		if '(╯°□°）╯︵ ┻━┻' in message.content:
 			await client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')
 
+		if bot.gpio_enabled == "yes":
+			GPIO.output(statPin,0)
+
 
 @client.event
 async def on_ready():
@@ -421,3 +471,7 @@ async def on_ready():
 #	exit(1)
 
 client.run(bot.get_bot_credential('token'))
+try:
+	GPIO.cleanup()
+except:
+	pass
