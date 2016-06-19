@@ -107,7 +107,11 @@ class Chatbot(object):
 							rank = x["rank"]
 					if rank != "Commander":
 						rank_role = discord.utils.find( lambda m: m.name == rank, serv.roles)
+						guest_role = discord.utils.find(lambda m: m.name == "Guest", serv.roles)
 						await client.add_roles(member, *[member_role, rank_role])
+						await asyncio.sleep(1)
+						if guest_role in member.roles:
+							await client.remove_roles(member, guest_role)
 					else:
 						await client.add_roles(member, member_role)
 					await client.send_message(message.channel, "Your display name has been recorded as {} and you have been given the Member role and appropriate rank role.".format(account_name))
@@ -155,7 +159,7 @@ class Chatbot(object):
 				with open(self.away_list, 'r') as f:
 					json_away = json.load(f)
 				formatted_away = 'Discord Name, GW2 Account Name, Date Set Away, Away Duration (in Days) \r\n'
-				for x in sorted(json_away):
+				for x in sorted(json_away, key=str.lower):
 					formatted_away += "{}, {}, {}, {} \r\n".format(x, json_away[x]["Account Name"], json_away[x]["Away on"], json_away[x]["Duration"])
 				with open('formatted_away.txt', 'w') as f:
 					f.write(formatted_away)
@@ -435,7 +439,7 @@ class Chatbot(object):
 
 			if query == 'list':
 				group_list = ''
-				for x in sorted(all_groups):
+				for x in sorted(all_groups, key=str.lower):
 					group_list += '{}: {}\n'.format(all_groups[x]["name"], all_groups[x]["description"])
 				await client.send_message(message.channel, "The following is a list of available groups and their descriptions:")
 				await client.send_message(message.channel, group_list)
@@ -448,7 +452,7 @@ class Chatbot(object):
 					mem = discord.utils.find(lambda m: m.id == x, serv.members)
 					member_list += [mem.name]
 				member_list_text = ''
-				for x in sorted(member_list):
+				for x in sorted(member_list, key=str.lower):
 					member_list_text += '{}, '.format(x)
 				member_list_text = member_list_text[:-2]
 				await client.send_message(message.channel, 'The following is a list of members of the group {}:\n{}'.format(all_groups[group_name]["name"], member_list_text))
@@ -786,6 +790,7 @@ class Chatbot(object):
 			await client.send_message(message.channel, "There was an error with your request. Please ensure you are using the correct format. E.g.: `!roll 2d8`")
 
 	async def roster_fnc(self, client, message, query):
+		serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
 		if self.check_role(client, message, 'Leadership') == False:
 			await client.send_message(message.channel, 'You do not have permission to use the roster functions.')
 
@@ -795,7 +800,7 @@ class Chatbot(object):
 			with open('display_names.txt', 'r') as f:
 				display_names = json.load(f)
 			json_roster = {}
-			formatted_roster = ''
+			formatted_roster = 'Display Name, Rank, Joined, Discord ID, Discord Name, Discord Roles, Last on Discord\r\n'
 			for x in full_roster:
 				if str(x["joined"]) == "None":
 					join_date = "None"
@@ -805,7 +810,7 @@ class Chatbot(object):
 					join_month = join_data.split('-')[1]
 					join_day = join_data.split('-')[2]
 					join_date = datetime(int(join_year), int(join_month), int(join_day)).strftime('%y-%m-%d')
-				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": join_date, "discord id": "N/A", "discord name": "N/A", "roles": "N/A"}
+				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": join_date, "discord id": "N/A", "discord name": "N/A", "roles": "N/A", "last on discord": "N/A"}
 				for y in display_names:
 					if str(display_names[y]["display name"]) == str(x["name"]):
 						serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
@@ -818,12 +823,29 @@ class Chatbot(object):
 								role_list += '{}; '.format(z.name)
 							role_list = role_list[:-2]
 							json_roster[x["name"]]["roles"] = role_list
-			for y in sorted(json_roster):
-				formatted_roster += '{}, {}, {}, {}, {}, {}\r\n'.format(y, json_roster[y]["rank"],str(json_roster[y]["joined"]), json_roster[y]["discord id"], json_roster[y]["discord name"], json_roster[y]["roles"])
+							last_on = self.log_fnc(member, 'last on')
+							if last_on == "now":
+								last_on = datetime.utcnow()
+							json_roster[x["name"]]["last on discord"] = str(last_on).partition('.')[0]
+			for y in sorted(json_roster, key=str.lower):
+				formatted_roster += '{},{},{},{},{},{},{}\r\n'.format(y, json_roster[y]["rank"],str(json_roster[y]["joined"]), json_roster[y]["discord id"], json_roster[y]["discord name"], json_roster[y]["roles"], json_roster[y]["last on discord"])
 			with open('formatted_roster.txt', 'w') as g:
 				g.write(formatted_roster)
 			await client.send_message(message.author, 'Here is the updated copy of the guild roster.')
 			await client.send_file(message.author, 'formatted_roster.txt')
+
+		elif query == 'last on':
+			last_on_roster = ''
+			for x in serv.members:
+				last_on = self.log_fnc(x, 'last on')
+				if last_on == "now":
+					last_on = datetime.utcnow()
+				last_on_roster += "{},{},{}\r\n".format(x.name, x.id, last_on)
+			last_on_roster = last_on_roster[:-1]
+			with open("last_on.txt", "w") as f:
+				f.write(last_on_roster)
+			await client.send_message(message.channel, "{} requested a log of Discord activity. Here is the latest information.".format(message.author))
+			await client.send_file(message.channel, "last_on.txt")
 
 		elif query == 'promotion':
 			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
@@ -854,7 +876,7 @@ class Chatbot(object):
 				elif app_squire_list[x]['rank'] == 'Squire' and days_passed > 60:
 					promotion_list[x] = app_squire_list[x]
 					promotion_list[x]['days passed'] = days_passed
-			for x in sorted(promotion_list):
+			for x in sorted(promotion_list, key=str.lower):
 				formatted_promotion += x + ', ' + promotion_list[x]["rank"] + ', ' + str(promotion_list[x]["joined"].partition('T')[0]) + ', ' + str(promotion_list[x]["days passed"]) + '\r\n'
 			with open('promotion_list.txt', 'w') as f:
 				f.write(formatted_promotion)
@@ -872,15 +894,19 @@ class Chatbot(object):
 			await client.send_file(message.author, 'promotion_list.txt')
 
 		elif query == 'send specified':
-			fields = message.content.partition(' ')[2].split(', ')
+			fields = message.content.lower().partition(' ')[2].split(', ')
 			response = requests.get("https://api.guildwars2.com/v2/guild/"+ self.guild_id +"/members?access_token="+ self.api_key)
 			full_roster = json.loads(response.text)
 			with open('display_names.txt', 'r') as f:
 				display_names = json.load(f)
 			json_roster = {}
-			specified_roster = ''
+			specified_roster = 'GW2 Display Name,'
+			for x in fields:
+				specified_roster += '{},'.format(x)
+			specified_roster = specified_roster[:-1]
+			specified_roster += '\r\n'
 			for x in full_roster:
-				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": x["joined"], "discord id": "N/A", "discord name": "N/A", "roles": "N/A"}
+				json_roster[x["name"]] = {"name": x["name"], "rank": x["rank"], "joined": x["joined"], "discord id": "N/A", "discord name": "N/A", "roles": "N/A", "last on discord": "N/A"}
 				for y in display_names:
 					if str(display_names[y]["display name"]) == str(x["name"]):
 						serv = discord.utils.find(lambda m: m.name == self.server_name, client.servers)
@@ -888,8 +914,14 @@ class Chatbot(object):
 						if member != None:
 							json_roster[x["name"]]["discord id"] = member.id
 							json_roster[x["name"]]["discord name"] = member.name
-							json_roster[x["name"]]["roles"] = member.roles
-			for y in sorted(json_roster):
+							role_list = ''
+							for z in member.roles:
+								if z.name != "@everyone":
+									role_list += '{};'.format(z.name)
+							role_list = role_list[:-1]
+							json_roster[x["name"]]["roles"] = role_list
+							json_roster[x["name"]]["last on discord"] = self.log_fnc(member, 'last on')
+			for y in sorted(json_roster, key=str.lower):
 				specified_roster += '{},'.format(y)
 				for x in fields:
 					specified_roster += '{},'.format(json_roster[y][x])

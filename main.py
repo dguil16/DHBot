@@ -263,7 +263,7 @@ async def on_message(message):
 		if message.content.lower().startswith('!help'):
 			await client.send_message(message.channel, "You can find a list of commands I understand, their syntax, and brief explanation in the following document: https://goo.gl/80heLg")
 
-		if message.content.startswith('!last_on '):
+		if message.content.lower().startswith('!last_on '):
 			id_or_name = message.content.partition(' ')[2]
 			member = bot.member_lookup(client, id_or_name, serv)
 			if member != None:
@@ -364,6 +364,9 @@ async def on_message(message):
 
 		if message.content.lower().startswith('!roster-copy'):
 			await bot.roster_fnc(client, message, 'copy')
+
+		if message.content.lower() == "!roster-last_on":
+			await bot.roster_fnc(client, message, 'last on')
 
 		if message.content.lower().startswith('!roster-promotion'):
 			await bot.roster_fnc(client, message, 'promotion')
