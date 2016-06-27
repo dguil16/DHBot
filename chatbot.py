@@ -731,8 +731,9 @@ class Chatbot(object):
 				member = discord.utils.find(lambda m: m.id == json_roster[x]["discord id"], serv.members)
 				rank = str(json_roster[x]["rank"])
 				rank_role = discord.utils.find(lambda m: m.name == rank, serv.roles)
+				await client.send_message(message.channel, str(len(rank_role_list)))
 				await client.remove_roles(member, *rank_role_list)
-				await client.add_roles(member, *[rank_role])
+				await client.add_roles(member, rank_role)
 				await asyncio.sleep(5)
 		await client.send_message(message.channel, "Roles have been updated according to the current roster's ranks.")
 

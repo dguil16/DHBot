@@ -327,7 +327,7 @@ async def on_message(message):
 			await bot.stop_bot(client, message)
 
 		if message.content.lower().startswith('!rank-update'):
-			if check_role(message, 'Admin') == True:
+			if bot.check_role(client, message, 'Admin') == True:
 				await bot.rank_update(client, message, serv)
 			else:
 				await client.send_message(message.channel, 'You do not have permission to use this function.')
