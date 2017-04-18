@@ -3,6 +3,7 @@
 import asyncio
 import datetime
 from datetime import datetime
+import fractals
 import json
 import os
 import sys
@@ -211,6 +212,13 @@ async def on_message(message):
 
 		if message.content.lower().startswith('!events-edit'):
 			await bot.file_interface(client, message, 'events', 'write')
+
+		if message.content.lower().startswith('!fractal-enroll '):
+			API_key = message.content.partition(' ')[2]
+			await fractals.enroll(client, message, message.author.id, API_key)
+
+		if message.content.lower() == "!fractal-unenroll":
+			await fractals.unenroll(client, message, message.author.id)
 
 		if message.content.lower().startswith('!group-create'):
 			await bot.group(client, message, 'create')
