@@ -6,6 +6,7 @@ from datetime import datetime
 import fractals
 import json
 import os
+import requests
 import sys
 from os.path import getmtime
 import logging
@@ -177,6 +178,36 @@ async def on_message(message):
 
 #		if message.content.lower() == '!stop':
 #			await voice.disconnect()
+
+		if message.content.lower() == "!achiev_list-update":
+			if bot.check_role(client, message, 'Admin') == True:
+				achiev_data = []
+				response = requests.get("https://api.guildwars2.com/v2/achievements")
+				achiev_list = json.loads(response.text)
+				iterations = (len(achiev_list) + 199) // 200
+				remainder = len(achiev_list) % 200
+				x=0
+				while x < iterations-1:
+					i = 1
+					id_list = ""
+					while i <= 200:
+						id_list = id_list + str(achiev_list[i+200*x]) + ","
+						i = i+1
+					id_list = id_list[:-1]
+					response =  requests.get("https://api.guildwars2.com/v2/achievements?ids="+id_list)
+					achiev_data = achiev_data + json.loads(response.text)
+					x = x+1
+				id_list = ""
+				i=1
+				while i < len(achiev_list) % 200:
+					id_list = id_list + str(achiev_list[i + 200*(iterations-1)]) + ","
+					i = i+1
+				id_list = id_list[:-1]
+				response =  requests.get("https://api.guildwars2.com/v2/achievements?ids="+id_list)
+				achiev_data = achiev_data + json.loads(response.text)
+				with open("achievement_data.txt", 'w') as f:
+					f.write(str(json.dumps(achiev_data)))
+				await client.send_message(message.channel, "The achievement database has been updated.")
 
 		if message.content.startswith('{}'.format(client.user.mention)):
 			cb_message = message.content.partition(' ')[2]
@@ -458,8 +489,8 @@ async def on_message(message):
 			elif message.channel.name == 'trivia':
 				await trivia_module.correct_answer(client, message)
 
-		if '(╯°□°）╯︵ ┻━┻' in message.content:
-			await client.send_message(message.channel, '┬─┬﻿ ノ( ゜-゜ノ) \n\n' +str(message.author.name) + ', what did the table do to you?')
+		if '(?°?°)?? ???' in message.content:
+			await client.send_message(message.channel, '---? ?( ?-??) \n\n' +str(message.author.name) + ', what did the table do to you?')
 
 		if bot.gpio_enabled == "yes":
 			GPIO.output(statPin,0)
@@ -483,3 +514,4 @@ try:
 	GPIO.cleanup()
 except:
 	pass
+
