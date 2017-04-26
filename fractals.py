@@ -1,3 +1,30 @@
+fractals.py
+DETAILS
+ACTIVITY
+Sharing Info
+Not shared
+General Info
+Type
+Text
+Size
+7 KB (7,200 bytes)
+Storage used
+7 KB (7,200 bytes)
+Location
+My Drive
+Owner
+me
+Modified
+3:15 PM by me
+Opened
+5:41 PM by me
+Created
+3:15 PM with Google Drive Web
+Description
+Add a description
+Download permissions
+Viewers can download
+
 #!/usr/bin/env python
 
 import asyncio
@@ -47,12 +74,65 @@ async def call(client, message, kind, info):
 		for x in fractal_users:
 			if int(fractal_users[x]["fractal_level"]) >= int(frac_level) - 5:
 				candidates = candidates + [str(x)]
+		with open('fractal_data', 'r') as f:
+			fractal_data = json.load(f)
+		fractal_name = fractal_data[int(frac_level)]["Name"]
+		message_content = " is looking for people to do a Level {} Fractal, which is: {}. ".format(str(frac_level), fractal_name)
+
+	elif kind in {"dailies", "daily"}:
+		response = requests.get("https://api.guildwars2.com/v2/achievements/daily")
+		dailies = json.loads(response.text)
+		fractal_dailies = dailies["fractals"]
+		fractal_names = []
+		fractal_names_text = ""
+		fractal_levels = []
+
+		if info.startswith('tier'):
+			try:
+				tier = int(info.split[' '][1])
+			except:
+				return False;
+			for x in fractal_dailies:
+				if x["name"].startswith('Daily Tier {}'.format(str(tier))):
+					possible_levels = []
+					fractal_names += [x["name"].split('Daily Tier {}'.format(str(tier)))]
+					for y in x["bits"]:
+						if (tier-1)*25 < int(y["text"].split('Fractal Scale ')[0]) <= (tier)*25
+						possible_levels += [int(y["text"].split('Fractal Scale ')[0])] 
+					fractal_levels += [min(possible_levels)]
+			highest_level = max(fractal_levels)
+			for x in fractal_names:
+				fractal_names_text += "{}, ".format(x)
+			fractal_names_text = fractal_names_text[:-2]
+			candidates = call(client, message, "level", str(highest_level))["candidates"]
+			message_content = " is looking for people to do Tier {} Fractal Dailies, which includes {}. ".format(str(tier), fractal_names_text)
+
+		elif info.startswith('pages'):
+			fractal_levels = []
+			for x in fractal_dailies:
+				if x["name"].startswith('Daily Recommended Fractal-Scale '):
+					fractal_levels += [int(x["name"].split('Daily Recommended Fractal-Scale ')[0])]
+			highest_level = max(fractal_levels)
+			candidates = call(client, message, "level", str(highest_level))["candidates"]
+			with open('fractal_data', 'r') as f:
+				fractal_data = json.load(f)
+			fractal_names_text = ""
+			for x in fractal_levels:
+				fractal_names_text += "{}, ".format([fractal_data[int(frac_level)]["Name"]])
+				fractal_levels_text += "{}, ".format(str(x))
+			fractal_names_text = fractal_names_text[:-2]
+			fractal_levels_text = fractal_levels_text[:-2]
+			message_content = " is looking for people to do Page Dailies, which includes levels {} which are {}. ".format(fractal_levels_text, fractal_names_text)
+
+		else:
+			return False;
+
 
 	else:
 		return False;
 #Check achievs
 		
-	return candidates;
+	return {"candidates": candidates, "message": message_content};
 
 
 async def enroll(client, message, Discord_ID, API_key):

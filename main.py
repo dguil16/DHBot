@@ -252,7 +252,9 @@ async def on_message(message):
 				try:
 					kind = message.content.lower().split(" ")[1]
 					info = message.content.lower().split(" ")[2]
-					candidates = await fractals.call(client, message, kind, info)
+					call_details = await fractals.call(client, message, kind, info)
+					candidates = call_details["candidates"]
+					message_content = call_details["message"]
 					candidate_mentions = ""
 					if candidates == False:
 						await client.send_message(message.channel, "I did not understand your request. Currently I only support Level requests, e.g.: !fractals level 50")
@@ -262,7 +264,7 @@ async def on_message(message):
 						for x in candidates:
 							candidate_mentions = candidate_mentions + str(bot.member_lookup(client, x, serv).mention) + ", "
 						candidate_mentions = candidate_mentions[:-2]
-						await client.send_message(message.channel, "{} is looking for people to do a {} {} fractal. {}".format(message.author.mention, kind.capitalize(), info, candidate_mentions))
+						await client.send_message(message.channel, "{} {} {}".format(message.author.mention, message_content, candidate_mentions))
 				except: await client.send_message(message.channel, "I did not recognize what kind of Fractal you were trying to request. Please try again.")
 
 
