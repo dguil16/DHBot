@@ -251,16 +251,16 @@ async def on_message(message):
 			elif message.content.lower().startswith('!fractals '):
 				try:
 					kind = message.content.lower().split(" ")[1]
-					info = message.content.lower().split(" ")[2]
+					info = message.content.lower().partition(" ")[2].partition(" ")[2]
 					call_details = await fractals.call(client, message, kind, info)
-					candidates = call_details["candidates"]
-					message_content = call_details["message"]
 					candidate_mentions = ""
-					if candidates == False:
+					if call_details == False:
 						await client.send_message(message.channel, "I did not understand your request. Currently I only support Level requests, e.g.: !fractals level 50")
-					elif candidates == []:
+					elif call_details["candidates"] == []:
 						await client.send_message(message.channel, "There were no users found who meet the specified request.")
 					else:
+						candidates = call_details["candidates"]
+						message_content = call_details["message"]
 						for x in candidates:
 							candidate_mentions = candidate_mentions + str(bot.member_lookup(client, x, serv).mention) + ", "
 						candidate_mentions = candidate_mentions[:-2]
