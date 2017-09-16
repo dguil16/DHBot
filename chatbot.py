@@ -115,6 +115,11 @@ class Chatbot(object):
 					else:
 						await client.add_roles(member, member_role)
 					await client.send_message(message.channel, "Your display name has been recorded as {} and you have been given the Member role and appropriate rank role.".format(account_name))
+				elif "CB78A373-14AC-4FED-9554-39E8053DDA34" in account_guilds:
+					KT_role = discord.utils.find(lambda m: m.name == "KT", serv.roles)
+					guest_role = discord.utils.find(lambda m: m.name == "Guest", serv.roles)
+					await client.add_roles(member, *[guest_role, KT_role])
+					await client.send_message(message.channel, "Your display name has been recorded as {} and you have been given the Guest and KT roles.".format(account_name))			
 				else:
 					await client.send_message(message.channel, "Your display name has been recorded as {}. I could not find you on the DH roster, so a member of leadership will need to assign your permissions.")
 				display_names[str(member.id)] = {"display name": account_name, "verified": "y"}
@@ -338,6 +343,7 @@ class Chatbot(object):
 									already_in_list += '{}, '.format(y.name)
 								else:
 									all_groups[x]["members"] += [y.id]
+									#add roles
 									added_list += '{}, '.format(y.name)
 							if already_in_list != '':
 								result_message += 'The following members are already in the group {}: {}\n'.format(all_groups[x]["name"], already_in_list[:-2])
