@@ -94,7 +94,7 @@ async def on_member_update(before, after):
 			x = open("display_names.txt", 'r')
 			disp_names = json.load(x)
 			x.close()
-			if after.id not in disp_names:
+			if after.id not in disp_names and KT_role not in after.roles:
 				await client.send_message(after, "My name is Xantha, the DH Discord bot. According to my records, your GW2 Display Name is not listed in our database. Please enter \n`!api <GW2 API>`\n without the <>. This API key only needs the \"Account\" permissions. For example:\n`!api AG6BE513-0890-A640-97D9-708A7594593781E9803C-F348-48B4-9A70-CE0B45072778`\n\nIf you are unfamiliar with this process, do the following:\n\n1) Go to https://account.arena.net/\n2) Click on \"Applications\" at the upper right.\n3) Click \"New Key\" on the right.\n4) Name the key whatever you would like and ensure the \"account\" checkbox is checked. You do not need to check any other boxes.\n5) Click \"Generate API Key\"\n\nThe information this makes available is the following: your GW2 display name, the world you belong to, if you are a commander, what guilds you are in, when your account was created, if you have a commander tag, and if your account is a free account, a GW2 account, or a HoT account. The only information that we will store is your display name, and you are welcome to delete this API key after you submit it.")
 
 	leadership_names = []
@@ -530,6 +530,7 @@ async def on_ready():
 	print('------')
 	global serv
 	serv = discord.utils.find(lambda m: m.name == bot.server_name, client.servers)
+	KT_role = discord.utils.find(lambda m: m.name == "KT", serv.roles)
 
 #if not client.is_logged_in:
 #	print('Logging in to Discord failed')
